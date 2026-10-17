@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<script>try{if(localStorage.getItem('an_tema')==='dark')document.documentElement.setAttribute('data-tema','dark')}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triagem • Central de Marcação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="triagem">
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="eyebrow">🩺 Triagem</span>
+      <h1>Solicitação de Triagem</h1>
+      <p>Registre uma solicitação com o encaminhamento, exames e informações do paciente ou acompanhe o andamento pelo número do protocolo.</p>
+    </div>
+  </div>
+</section>
+
+<main class="tg-wrap" id="conteudo">
+
+  <!-- Abas (o JS troca entre elas em triagem.js > abrirAba) -->
+  <div class="tg-tabs" role="tablist" aria-label="Triagem">
+    <button type="button" role="tab" class="active" id="tab-nova" data-aba="nova" aria-selected="true" aria-controls="aba-nova">📝 Nova Solicitação</button>
+    <button type="button" role="tab" id="tab-consultar" data-aba="consultar" aria-selected="false" aria-controls="aba-consultar" tabindex="-1">🔍 Consultar Protocolo</button>
+  </div>
+
+  <!-- ===================== NOVA AÇÃO ===================== -->
+  <section id="aba-nova" role="tabpanel" aria-labelledby="tab-nova">
+    <form id="triForm" novalidate autocomplete="off">
+
+      <div class="tg-block" role="group" aria-labelledby="h-paciente">
+        <h2 class="tg-block-head" id="h-paciente"><span aria-hidden="true">👤</span> Dados do Paciente</h2>
+        <label class="au-f"><span>Nome completo <b class="tg-req" title="Obrigatório">*</b></span>
+          <input class="au-plain" id="fNome" type="text" maxlength="120" required autocomplete="off" aria-describedby="e_nome">
+          <em class="tg-err" id="e_nome" role="alert"></em></label>
+        <div class="tg-row">
+          <label class="au-f"><span>CPF <b class="tg-req" title="Obrigatório">*</b></span>
+            <input class="au-plain" id="fCpf" type="text" required inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" aria-describedby="e_cpf">
+            <em class="tg-err" id="e_cpf" role="alert"></em></label>
+          <label class="au-f"><span>Data de nascimento <b class="tg-req" title="Obrigatório">*</b></span>
+            <input class="au-plain" id="fNasc" type="date" required aria-describedby="e_nascimento fIdade">
+            <em class="tg-idade" id="fIdade" aria-live="polite"></em>
+            <em class="tg-err" id="e_nascimento" role="alert"></em></label>
+          <label class="au-f"><span>Contato <b class="tg-req" title="Obrigatório">*</b></span>
+            <input class="au-plain" id="fTel" required type="tel" inputmode="tel" maxlength="15" placeholder="(00) 00000-0000" autocomplete="off" aria-describedby="e_contato">
+            <em class="tg-err" id="e_contato" role="alert"></em></label>
+        </div>
+        <label class="au-f"><span>Convênio <b class="tg-req" title="Obrigatório">*</b></span>
+          <input class="au-plain" id="fConvenio" type="text" maxlength="60" required placeholder="Ex.: SUS, Unimed, Particular" autocomplete="off" aria-describedby="e_convenio">
+          <em class="tg-err" id="e_convenio" role="alert"></em></label>
+        <label class="au-f"><span>Tipo de atendimento <b class="tg-req" title="Obrigatório">*</b></span>
+          <select class="au-plain" id="fTipo" required aria-describedby="e_tipoAtendimento">
+            <option value="">Selecione…</option>
+            <option value="Consulta 1ª vez">Consulta 1ª vez</option>
+            <option value="Reencaminhamento">Reencaminhamento</option>
+          </select>
+          <em class="tg-err" id="e_tipoAtendimento" role="alert"></em></label>
+      </div>
+
+      <div class="tg-block" role="group" aria-labelledby="h-medico">
+        <h2 class="tg-block-head" id="h-medico"><span aria-hidden="true">⚕️</span> Dados Médicos</h2>
+        <label class="au-f"><span>Médico sugerido</span>
+          <input class="au-plain" id="fMedico" type="text" maxlength="120" placeholder="Ex.: Dra. Sulene Cunha" autocomplete="off" aria-describedby="e_medico">
+          <em class="tg-err" id="e_medico" role="alert"></em></label>
+        <div class="tg-row">
+          <label class="au-f"><span>Especialidade <b class="tg-req" title="Obrigatório">*</b></span>
+            <input class="au-plain" id="fEsp" type="text" required maxlength="80" placeholder="Ex.: Oncologia clínica" autocomplete="off" aria-describedby="e_especialidade">
+            <em class="tg-err" id="e_especialidade" role="alert"></em></label>
+        </div>
+      </div>
+
+      <div class="tg-block" role="group" aria-labelledby="h-docs">
+        <h2 class="tg-block-head" id="h-docs"><span aria-hidden="true">📎</span> Documentação</h2>
+        <p class="tg-hint">Exames, biópsias e encaminhamentos em arquivos PDF, JPG, JPEG ou PNG. <b>Sem limite de quantidade.</b> Você também pode <b>colar imagens</b> com <kbd>Ctrl</kbd> + <kbd>V</kbd>. Cada PDF pode ter até 3 MB; as fotos são reduzidas automaticamente.</p>
+        <input type="file" id="triFiles" class="tg-file" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+        <label class="tg-drop" id="triDrop" for="triFiles">
+          <span class="tg-drop-ico" aria-hidden="true">⬆️</span>
+          <b>Clique para escolher</b> ou arraste os arquivos até aqui
+          <small>.pdf · .jpg · .jpeg · .png</small>
+        </label>
+        <div class="tg-paste-row">
+          <button type="button" class="tg-btn" id="triColar" title="Cola a imagem que está na área de transferência">📋 Colar imagem</button>
+          <span>ou pressione <kbd>Ctrl</kbd> + <kbd>V</kbd> nesta página</span>
+        </div>
+        <div class="au-msg" id="triArqMsg" role="alert" style="margin-top:12px"></div>
+        <ul class="tg-files hidden" id="triLista" aria-label="Arquivos selecionados"></ul>
+        <p class="tg-files-sum" id="triArqResumo"></p>
+      </div>
+
+      <div class="au-msg" id="triMsg" role="alert"></div>
+      <div class="tg-actions">
+        <button class="btn tg-submit" id="triEnviar" type="submit">📨 Enviar</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===================== CONSULTAR PROTOCOLO ===================== -->
+  <section id="aba-consultar" class="hidden" role="tabpanel" aria-labelledby="tab-consultar">
+    <div class="tg-block">
+      <h2 class="tg-block-head"><span aria-hidden="true">🔍</span> Consultar Protocolo</h2>
+      <form id="triBusca" class="tg-busca" novalidate>
+        <label class="au-f" style="flex:1;margin:0"><span>Número do protocolo</span>
+          <input class="au-plain tg-proto-in" id="triProtocolo" type="text" maxlength="10" placeholder="LIGA-XXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+        <button class="btn tg-submit" id="triBuscar" type="submit">🔍 Buscar</button>
+      </form>
+      <div class="au-msg" id="triBuscaMsg" role="alert" style="margin-top:14px"></div>
+      <div id="triResultado"></div>
+    </div>
+  </section>
+
+  <div class="page-end"></div>
+</main>
+
+<script src="shell.js"></script>
+<script src="triagem.js"></script>
+</body>
+</html>

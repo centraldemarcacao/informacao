@@ -1,0 +1,248 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- funções auxiliares ----------
+    function logado()         { return request.auth != null; }
+    function docUsuario(id)   { return /databases/$(database)/documents/usuarios/$(id); }
+    function docVinculo(id)   { return /databases/$(database)/documents/vinculos/$(id); }
+    function docLogin(u)      { return /databases/$(database)/documents/logins/$(u); }
+
+    // Id do perfil de quem está logado. Normalmente é o próprio uid; quem entrou com a
+    // senha temporária usa uma credencial nova, ligada ao perfil antigo pela coleção "vinculos".
+    function pid() {
+      return exists(docUsuario(request.auth.uid)) ? request.auth.uid
+           : (exists(docVinculo(request.auth.uid)) ? get(docVinculo(request.auth.uid)).data.perfil : request.auth.uid);
+    }
+    function temPerfil()      { return exists(docUsuario(pid())); }
+    function perfil()         { return get(docUsuario(pid())).data; }
+    // "authAtual" só existe depois de uma redefinição de senha: só a credencial indicada nele vale.
+    function ativo() {
+      return logado() && temPerfil() && perfil().ativo == true
+        && perfil().get('authAtual', request.auth.uid) == request.auth.uid;
+    }
+    // Administrador = criador do sistema. Gestor e Administrador têm os mesmos acessos de gestão.
+    function admin()          { return ativo() && perfil().papel == 'admin'; }
+    function gestao()         { return ativo() && perfil().papel in ['gestor', 'admin']; }
+    // Perfil "Triagem" = operador + acesso à tela de triagem (ver e alterar status; excluir continua só do administrador).
+    function triagemOk()      { return ativo() && perfil().papel in ['triagem', 'gestor', 'admin']; }
+    function temGeral()       { return exists(/databases/$(database)/documents/config/geral); }
+    function geral()          { return get(/databases/$(database)/documents/config/geral).data; }
+    function criador()        { return geral().get('criadorUid', ''); }
+    function emailAtual()     { return request.auth.token.email.lower(); }
+    function mudou()          { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // ---------- configuração geral (só guarda se o cadastro é aberto e quem é o criador) ----------
+    match /config/geral {
+      allow read: if true;
+      // a primeira conta do sistema cria a configuração e vira administrador (no mesmo lote)
+      allow create: if logado() && !temGeral()
+        && request.resource.data.keys().hasOnly(['cadastroAberto', 'criado', 'criadorUid'])
+        && request.resource.data.criadorUid == request.auth.uid
+        && getAfter(docUsuario(request.auth.uid)).data.papel == 'admin';
+      // só dá para mudar "cadastroAberto" (o criador nunca muda)
+      allow update: if gestao() && mudou().hasOnly(['cadastroAberto']);
+    }
+
+    // ---------- entrada por usuário (cada usuário tem um registro público e pequeno) ----------
+    // Guarda só o e-mail interno usado no login e se há redefinição de senha em andamento.
+    match /logins/{usuario} {
+      allow get: if true;
+      allow list: if gestao();
+      // criado junto com o perfil (cadastro) ou na primeira entrada de uma conta antiga
+      allow create: if logado()
+        && usuario.matches('^[a-z0-9._-]{3,30}$')
+        && request.resource.data.keys().hasOnly(['email', 'perfil', 'reset', 'pedido'])
+        && request.resource.data.email == emailAtual()
+        && request.resource.data.perfil == request.auth.uid
+        && request.resource.data.reset == false
+        && request.resource.data.pedido == false
+        && emailAtual().split('@')[0] == usuario
+        && getAfter(docUsuario(request.auth.uid)).data.get('usuario', '') == usuario;
+      allow update: if
+        // gestão: gera a senha temporária e dispensa pedidos
+        (gestao() && mudou().hasOnly(['reset', 'expira', 'pedido']))
+        // a própria pessoa, ao concluir a entrada com a senha temporária
+        || (ativo() && perfil().get('usuario', '') == usuario
+            && mudou().hasOnly(['email', 'reset'])
+            && request.resource.data.reset == false
+            && request.resource.data.email == emailAtual())
+        // "esqueci minha senha": qualquer visitante pode registrar o pedido
+        || (mudou().hasOnly(['pedido']) && request.resource.data.pedido == true);
+      allow delete: if ativo() && perfil().get('usuario', '') == usuario;
+    }
+
+    // ---------- vínculo entre a credencial nova (senha temporária) e o perfil ----------
+    match /vinculos/{authUid} {
+      allow read, delete: if logado() && request.auth.uid == authUid;
+      allow create: if logado() && request.auth.uid == authUid
+        && request.resource.data.keys().hasOnly(['perfil', 'usuario'])
+        && request.resource.data.perfil is string
+        && request.resource.data.usuario is string
+        && !exists(docUsuario(request.auth.uid))
+        && emailAtual().split('@')[0].split('[+]')[0] == request.resource.data.usuario
+        && exists(docUsuario(request.resource.data.perfil))
+        && get(docUsuario(request.resource.data.perfil)).data.get('usuario', '') == request.resource.data.usuario
+        && get(docUsuario(request.resource.data.perfil)).data.get('authAtual', '') == 'PENDENTE'
+        && get(docLogin(request.resource.data.usuario)).data.perfil == request.resource.data.perfil
+        && get(docLogin(request.resource.data.usuario)).data.reset == true
+        && get(docLogin(request.resource.data.usuario)).data.expira > request.time.toMillis();
+    }
+
+    // ---------- perfil de cada usuário ----------
+    match /usuarios/{uid} {
+      // o gestor só enxerga operadores e gestores (administradores ficam invisíveis para ele)
+      allow read: if logado() && (
+           pid() == uid
+        || admin()
+        || (gestao() && resource.data.papel in ['operador', 'triagem', 'gestor'])
+      );
+
+      // cria o próprio perfil: administrador (só a primeira conta) ou operador (se o usuário foi autorizado / cadastro aberto)
+      allow create: if logado() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['usuario','email','papel','ativo','nome','tema','favoritos','usos','ordem','criado'])
+        && request.resource.data.usuario is string
+        && request.resource.data.usuario == emailAtual().split('@')[0]
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120
+        && request.resource.data.ativo == true
+        && !exists(docLogin(request.resource.data.usuario))
+        && getAfter(docLogin(request.resource.data.usuario)).data.perfil == request.auth.uid
+        && (
+             (request.resource.data.papel == 'admin' && !temGeral())
+          || (request.resource.data.papel == 'operador' && temGeral()
+              && (geral().cadastroAberto == true
+                  || exists(/databases/$(database)/documents/autorizados/$(request.resource.data.usuario))))
+        );
+
+      allow update:
+        // o próprio usuário: só preferências (nunca papel/ativo)
+        if (logado() && pid() == uid && ativo()
+            && mudou().hasOnly(['nome','tema','favoritos','usos','ordem','senhaTemp','email'])
+            && request.resource.data.get('email', '') is string
+            && request.resource.data.get('email', '').size() <= 120)
+        // conta antiga: grava o campo "usuario" (começo do e-mail) uma única vez
+        || (logado() && pid() == uid && ativo()
+            && !resource.data.keys().hasAny(['usuario'])
+            && mudou().hasOnly(['usuario'])
+            && request.resource.data.usuario == emailAtual().split('@')[0])
+        // gestão: papel/ativo ou senha temporária de OUTRAS pessoas, nunca do criador.
+        // O gestor não mexe em administradores e não consegue conceder o perfil de administrador.
+        || (gestao() && pid() != uid && uid != criador()
+            && (admin() || resource.data.papel in ['operador', 'triagem', 'gestor'])
+            && (
+                 (mudou().hasOnly(['papel','ativo'])
+                   && (admin() || request.resource.data.papel in ['operador', 'triagem', 'gestor']))
+              || (mudou().hasOnly(['authAtual','senhaTemp'])
+                   && request.resource.data.authAtual == 'PENDENTE'
+                   && request.resource.data.senhaTemp == true)
+            ))
+        // quem entrou com a senha temporária assume o perfil (uma única vez)
+        || (logado() && !exists(docUsuario(request.auth.uid)) && exists(docVinculo(request.auth.uid))
+            && get(docVinculo(request.auth.uid)).data.perfil == uid
+            && resource.data.get('authAtual', '') == 'PENDENTE'
+            && mudou().hasOnly(['authAtual'])
+            && request.resource.data.authAtual == request.auth.uid);
+
+      // excluir a própria conta (gestor e administrador não podem, para o sistema nunca ficar sem gestão)
+      allow delete: if logado() && pid() == uid && ativo() && !(perfil().papel in ['gestor', 'admin']);
+    }
+
+    // ---------- anotações pessoais ----------
+    match /usuarios/{uid}/notas/{nota} {
+      allow read, delete: if logado() && pid() == uid && ativo();
+      allow create, update: if logado() && pid() == uid && ativo()
+        && request.resource.data.keys().hasOnly(['titulo', 'texto', 'categoria', 'atualizado'])
+        && request.resource.data.titulo is string && request.resource.data.titulo.size() > 0 && request.resource.data.titulo.size() <= 80
+        && request.resource.data.texto is string && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 5000
+        && request.resource.data.categoria is string && request.resource.data.categoria.size() <= 40;
+    }
+
+    // ---------- mensagens compartilhadas: quem entrou lê, só a gestão escreve ----------
+    match /respostas/{id} {
+      allow read: if ativo();
+      allow create, update: if gestao()
+        && request.resource.data.keys().hasOnly(['grupo','titulo','texto','oculta','atualizado','por'])
+        && request.resource.data.grupo is string && request.resource.data.grupo.size() > 0 && request.resource.data.grupo.size() <= 60
+        && request.resource.data.titulo is string && request.resource.data.titulo.size() > 0 && request.resource.data.titulo.size() <= 80
+        && request.resource.data.texto is string && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 5000
+        && request.resource.data.oculta is bool;
+      allow delete: if gestao();
+    }
+
+    // ---------- avisos para quem está com o site aberto: quem entrou lê, só a gestão envia ----------
+    match /avisos/{id} {
+      allow read: if ativo();
+      allow create, update: if gestao() && id == 'atual'
+        && request.resource.data.keys().hasOnly(['texto', 'enviadoEm', 'uid'])
+        && request.resource.data.texto is string && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 500
+        && request.resource.data.uid == request.auth.uid;
+    }
+
+    // ---------- usuários autorizados a criar conta (só a gestão) ----------
+    match /autorizados/{usuario} {
+      allow read, delete: if gestao();
+      allow create: if gestao()
+        && usuario.matches('^[a-z0-9._-]{3,30}$')
+        && request.resource.data.keys().hasOnly(['por', 'criado']);
+    }
+
+    // ---------- TRIAGEM ----------
+    // triagens/{LIGA-XXXXX}: dados públicos da consulta (qualquer pessoa consulta pelo número do protocolo, mas ninguém lista).
+    // triagens/{id}/privado/dados: CPF, nascimento, contato e anexos (só a gestão lê).
+    match /triagens/{protocolo} {
+      allow get: if true;
+      allow list: if triagemOk();
+      allow create: if protocolo.matches('^LIGA-[A-HJ-NP-Z2-9]{5}$')
+        && request.resource.data.keys().hasOnly(['protocolo', 'nome', 'medico', 'medicoEspecialidade', 'medicoCrm', 'status', 'criadoEm'])
+        && request.resource.data.protocolo == protocolo
+        && request.resource.data.status == 'Pendente'
+        && request.resource.data.criadoEm == request.time
+        && request.resource.data.nome is string && request.resource.data.nome.size() >= 3 && request.resource.data.nome.size() <= 120
+        && request.resource.data.medico is string && request.resource.data.medico.size() <= 120
+        && request.resource.data.medicoEspecialidade is string && request.resource.data.medicoEspecialidade.size() >= 2 && request.resource.data.medicoEspecialidade.size() <= 80
+        && (!('medicoCrm' in request.resource.data) || (request.resource.data.medicoCrm is string && request.resource.data.medicoCrm.size() <= 20))
+        && existsAfter(/databases/$(database)/documents/triagens/$(protocolo)/privado/dados);
+      // a gestão só muda o status (e a data da alteração)
+      allow update: if triagemOk() && mudou().hasOnly(['status', 'atualizadoEm'])
+        && request.resource.data.status in ['Pendente', 'Analisando', 'Autorizado', 'Não Autorizado']
+        && request.resource.data.atualizadoEm == request.time;
+      allow delete: if admin();
+
+      match /privado/{doc} {
+        allow read: if triagemOk();
+        allow create: if doc == 'dados'
+          && !exists(/databases/$(database)/documents/triagens/$(protocolo))
+          && existsAfter(/databases/$(database)/documents/triagens/$(protocolo))
+          && request.resource.data.keys().hasOnly(['cpf', 'nascimento', 'contato', 'convenio', 'tipoAtendimento', 'anexos'])
+          && request.resource.data.cpf is string && request.resource.data.cpf.size() == 11
+          && request.resource.data.nascimento is string && request.resource.data.nascimento.size() == 10
+          && request.resource.data.contato is string && request.resource.data.contato.size() >= 10 && request.resource.data.contato.size() <= 11
+          && request.resource.data.convenio is string && request.resource.data.convenio.size() >= 2 && request.resource.data.convenio.size() <= 60
+          && request.resource.data.tipoAtendimento is string && request.resource.data.tipoAtendimento.matches('^(Consulta 1. vez|Reencaminhamento)$')   // deve ser IGUAL ao valor do formulário ("Consulta 1ª vez"); '.' cobre o 'ª' sem depender de acentuação
+          && request.resource.data.anexos is list;   // sem limite de quantidade de anexos
+        allow update: if triagemOk() && mudou().hasOnly(['atualizadoPor'])
+          && request.resource.data.atualizadoPor is string && request.resource.data.atualizadoPor.size() <= 60;
+        allow delete: if admin();
+      }
+
+      // conteúdo dos anexos (base64 em partes): qualquer pessoa cria junto com a solicitação; só a gestão lê.
+      // Sem limite de quantidade: muitos anexos são gravados em vários lotes. O 1º lote vai junto com a solicitação;
+      // os seguintes são aceitos só nos primeiros 30 minutos depois do registro (e nunca sobrescrevem partes existentes).
+      match /anexos/{parte} {
+        allow read: if triagemOk();
+        allow create: if parte.matches('^[0-9]{1,4}_[0-9]{1,2}$')
+          && request.resource.data.keys().hasOnly(['arquivo', 'parte', 'dados'])
+          && request.resource.data.arquivo is int && request.resource.data.parte is int
+          && request.resource.data.dados is string && request.resource.data.dados.size() <= 700000
+          && (
+            (!exists(/databases/$(database)/documents/triagens/$(protocolo))
+              && existsAfter(/databases/$(database)/documents/triagens/$(protocolo)))
+            ||
+            (exists(/databases/$(database)/documents/triagens/$(protocolo))
+              && get(/databases/$(database)/documents/triagens/$(protocolo)).data.criadoEm > request.time - duration.value(30, 'm'))
+          );
+        allow delete: if admin();
+      }
+    }
+  }
+}

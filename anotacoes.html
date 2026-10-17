@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<script>try{if(localStorage.getItem('an_tema')==='dark')document.documentElement.setAttribute('data-tema','dark')}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anotações • Central de Marcação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.nova-nota{margin-left:auto}
+</style>
+</head>
+<body data-page="anotacoes">
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="eyebrow">📋 Anotações</span>
+      <h1>Mensagens Prontas</h1>
+      <p>Clique em uma mensagem para copiá-la na hora. Use <b>Ver</b> para conferir como ela aparece no WhatsApp antes de enviar.</p>
+    </div>
+  </div>
+</section>
+
+<main class="wrap" id="conteudo">
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-ico">💬</div><div><b id="kTotal">0</b><span>Mensagens</span></div></div>
+    <div class="kpi"><div class="kpi-ico">🗂️</div><div><b id="kGroups">0</b><span>Categorias</span></div></div>
+    <div class="kpi"><div class="kpi-ico">🕘</div><div><b id="kRecent">0</b><span>Usadas recentemente</span></div></div>
+    <div class="kpi"><div class="kpi-ico">⏰</div><div><b class="txt" id="kNow">—</b><span>Sugerida agora</span></div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search"><input type="search" id="busca" placeholder="Buscar mensagem (título ou conteúdo)..." autocomplete="off" aria-label="Buscar mensagem"></div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="recent hidden" id="recent"></div>
+
+  <div id="lista"></div>
+  <div class="page-end"></div>
+
+</main>
+
+<script src="shell.js"></script>
+<script src="mensagens.js?v=20261016"></script>
+<script src="core.js"></script>
+<script>
+const meta = g => META[g] || { ico:'💬', c:'#1a4f88' };
+const cvars = g => `--c:${meta(g).c};--bg-c:${meta(g).c}1f`;
+
+const $ = id => document.getElementById(id);
+const ITEMS = GROUPS.flatMap(g => g.items.map(i => ({ id:i.id, label:i.label, g:g.title, text:TEXTOS[i.id] || '' })));
+ITEMS.forEach(i => i.nq = UI.norm(i.label + ' ' + i.text));
+const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+
+const state = { q:'', g:'all' };
+const waHTML = t => UI.esc(t).replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
+const clean = t => t.replace(/\*/g, '').replace(/[ \t]+/g, ' ').trim();
+
+/* saudação sugerida pelo horário */
+const hour = new Date().getHours();
+const NOW_ID = hour < 12 ? 'bomdia' : hour < 18 ? 'boatarde' : 'boanoite';
+
+/* usadas recentemente (guardadas só neste navegador) */
+let recent = (UI.store.get('rr_recent', []) || []).filter(id => byId[id]).slice(0, 6);
+
+function use(id){
+  recent = [id].concat(recent.filter(x => x !== id)).slice(0, 6);
+  UI.store.set('rr_recent', recent);
+  renderRecent();
+}
+function copyItem(id){
+  const it = byId[id]; if(!it) return;
+  UI.copy(it.text, 'Copiado: ' + it.label);
+  use(id);
+}
+
+function renderRecent(){
+  $('kRecent').textContent = recent.length;
+  const box = $('recent');
+  box.classList.toggle('hidden', !recent.length);
+  box.innerHTML = '<span class="chips-label">Recentes</span>' + recent.map(id =>
+    `<button class="chip" data-copy="${UI.esc(id)}" type="button" title="Copiar novamente">${UI.esc(byId[id].label)}</button>`).join('') +
+    '<button class="btn ghost" id="clearRecent" type="button" style="margin-left:auto">Limpar</button>';
+}
+
+function renderChips(){
+  $('chips').innerHTML =
+    `<button class="chip ${state.g==='all'?'active':''}" data-g="all">Todas <em>${ITEMS.length}</em></button>` +
+    GROUPS.map(g => `<button class="chip ${state.g===g.title?'active':''}" style="--c:${meta(g.title).c}" data-g="${UI.esc(g.title)}"><i></i>${meta(g.title).ico} ${UI.esc(g.title)} <em>${g.items.length}</em></button>`).join('');
+}
+
+function card(it){
+  const now = it.id === NOW_ID ? '<span class="count-pill" style="--c:#2e7d32;--bg-c:#e8f5e9">Sugerida agora</span>' : '';
+  return `<article class="tpl" style="${cvars(it.g)}" data-copy="${UI.esc(it.id)}" tabindex="0" role="button" aria-label="Copiar ${UI.esc(it.label)}">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><h3>${UI.esc(it.label)}</h3>${now}</div>
+    <p class="prev">${UI.esc(clean(it.text))}</p>
+    <div class="acts">
+      <button class="btn" data-copy="${UI.esc(it.id)}" type="button">📋 Copiar</button>
+      <button class="btn ghost" data-view="${UI.esc(it.id)}" type="button">👁 Ver</button>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const q = UI.norm(state.q.trim());
+  const list = ITEMS.filter(i => (state.g==='all' || i.g===state.g) && (!q || i.nq.includes(q)));
+  $('kTotal').textContent = list.length;
+  $('kGroups').textContent = new Set(list.map(i => i.g)).size;
+  $('lista').innerHTML = GROUPS.map(g => {
+    const items = list.filter(i => i.g===g.title);
+    if(!items.length) return '';
+    return `<section class="section" style="${cvars(g.title)}">
+      <div class="sec-head"><h2>${meta(g.title).ico} ${UI.esc(g.title)}</h2><span class="count-pill">${items.length}</span></div>
+      <div class="tpl-grid">${items.map(card).join('')}</div>
+    </section>`;
+  }).join('') || '<div class="nothing"><big>🔎</big>Nenhuma mensagem encontrada</div>';
+  renderChips();
+}
+
+function viewItem(id){
+  const it = byId[id]; if(!it) return;
+  const m = UI.openModal({
+    title: it.label, sub: it.g,
+    html: `<div class="wa-bg"><div class="wa">${waHTML(it.text)}</div></div>`,
+    foot: '<button class="btn" id="mCopy" type="button">📋 Copiar</button>'
+  });
+  m.foot.querySelector('#mCopy').onclick = () => { copyItem(id); UI.closeModal(); };
+}
+
+/* ---------- eventos ---------- */
+$('busca').addEventListener('input', UI.debounce(e => { state.q = e.target.value; render(); }, 100));
+$('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; state.g = b.dataset.g; render(); });
+
+document.addEventListener('click', e => {
+  if(e.target.closest('#clearRecent')){ recent = []; UI.store.set('rr_recent', []); renderRecent(); return; }
+  const v = e.target.closest('[data-view]'); if(v){ e.stopPropagation(); viewItem(v.dataset.view); return; }
+  const c = e.target.closest('[data-copy]'); if(c){ copyItem(c.dataset.copy); }
+});
+$('lista').addEventListener('keydown', e => {
+  if((e.key==='Enter' || e.key===' ') && e.target.classList.contains('tpl')){
+    e.preventDefault(); copyItem(e.target.dataset.copy);
+  }
+});
+
+const nowItem = byId[NOW_ID];
+$('kNow').textContent = nowItem ? nowItem.label : '—';
+renderRecent();
+render();
+</script>
+
+<script>
+/* =====================================================================
+   ANOTAÇÕES — parte que depende de quem entrou (a página é aberta a todos)
+   - Visitante: vê só as mensagens padrão. "＋ Nova anotação" explica como entrar e não cria nada.
+   - Quem entrou pelo Painel de Controle: tem as próprias anotações, favoritos, contadores e
+     as mensagens ajustadas pela gestão.
+   O login fica somente no painel.html.
+   ===================================================================== */
+(function () {
+'use strict';
+
+const q = (s, r) => (r || document).querySelector(s);
+const qa = (s, r) => [...(r || document).querySelectorAll(s)];
+const esc = UI.esc;
+const { showMsg, erroMsg } = Core;
+const B = () => Core.B;
+const P = () => Core.perfil;
+const GRUPO = 'Minhas Anotações';
+const FAV = '__fav';
+
+let notes = [], shared = {};
+
+/* =============== modelo: mensagens padrão + ajustes da gestão + anotações pessoais =============== */
+function sortedNotes(){
+  const pos = {}; ((P() && P().ordem) || []).forEach((id, i) => pos[id] = i);
+  return notes.slice().sort((a, b) => ((pos[a.id] ?? 1e9) - (pos[b.id] ?? 1e9)) || a.titulo.localeCompare(b.titulo, 'pt-BR'));
+}
+function notesGroups(){
+  const cats = {};
+  sortedNotes().forEach(n => { const c = (n.categoria || '').trim(); (cats[c] = cats[c] || []).push(n); });
+  return Object.keys(cats).sort((a, b) => a === '' ? -1 : b === '' ? 1 : a.localeCompare(b, 'pt-BR')).map(c => {
+    const title = c ? GRUPO + ' · ' + c : GRUPO;
+    META[title] = META[title] || { ico: '📝', c: '#0d3b66' };
+    return { title, items: cats[c].map(n => ({ id: 'nota_' + n.id, label: n.titulo, text: n.texto })) };
+  });
+}
+function textoFinal(id, texto){
+  if (P() && P().nome && Msgs.BASE_IDS.has(id) && texto === Msgs.BASE_TEXTOS[id]) return texto.replace(/Me chamo Rauan/g, 'Me chamo ' + P().nome);
+  return texto;
+}
+function rebuild(){
+  const logado = !!P();
+  const all = logado ? notesGroups().concat(Msgs.model(shared)) : Msgs.base();
+  GROUPS.length = 0; all.forEach(g => GROUPS.push({ title: g.title, items: g.items.map(i => ({ id: i.id, label: i.label })) }));
+  ITEMS.length = 0;
+  Object.keys(byId).forEach(k => delete byId[k]); Object.keys(TEXTOS).forEach(k => delete TEXTOS[k]);
+  all.forEach(g => g.items.forEach(i => {
+    const text = textoFinal(i.id, i.text), it = { id: i.id, label: i.label, g: g.title, text };
+    it.nq = UI.norm(it.label + ' ' + text); ITEMS.push(it); byId[it.id] = it; TEXTOS[it.id] = text;
+  }));
+  if (state.g !== 'all' && state.g !== FAV && !GROUPS.some(g => g.title === state.g)) state.g = 'all';
+  recent = recent.filter(id => byId[id]);
+  renderRecent(); render();
+}
+
+/* =============== cards: favoritos, contador de uso, editar/duplicar/excluir (só para quem entrou) =============== */
+const renderOriginal = render;
+render = function(){ renderOriginal(); decorar(); };
+
+function decorar(){
+  const lista = q('#lista'), chips = q('#chips');
+  const p = P();
+  if (!p) return;
+  const favIds = (p.favoritos || []).filter(id => byId[id]);
+  if (chips && chips.firstElementChild)
+    chips.firstElementChild.insertAdjacentHTML('afterend',
+      `<button class="chip ${state.g === FAV ? 'active' : ''}" style="--c:#f59e0b" data-g="${FAV}"><i></i>⭐ Favoritos <em>${favIds.length}</em></button>`);
+  const qn = UI.norm(state.q.trim());
+  const favItems = favIds.map(id => byId[id]).filter(i => !qn || i.nq.includes(qn));
+  const sec = () => `<section class="section" style="--c:#f59e0b;--bg-c:#f59e0b1f">
+      <div class="sec-head"><h2>⭐ Favoritos</h2><span class="count-pill">${favItems.length}</span></div>
+      <div class="tpl-grid">${favItems.map(card).join('')}</div></section>`;
+  if (state.g === FAV){
+    lista.innerHTML = favItems.length ? sec() : '<div class="nothing"><big>⭐</big>Nenhum favorito ainda. Clique na ☆ de uma mensagem para fixá-la aqui.</div>';
+    q('#kTotal').textContent = favItems.length; q('#kGroups').textContent = new Set(favItems.map(i => i.g)).size;
+  } else if (state.g === 'all' && favItems.length) lista.insertAdjacentHTML('afterbegin', sec());
+
+  qa('.tpl[data-copy]', lista).forEach(c => {
+    const id = c.dataset.copy, acts = q('.acts', c); if (!acts) return;
+    const fav = favIds.includes(id), n = (p.usos || {})[id] || 0;
+    let h = `<button class="btn ghost fav ${fav ? 'on' : ''}" data-fav="${esc(id)}" type="button" title="${fav ? 'Remover dos favoritos' : 'Favoritar'}" aria-pressed="${fav}">${fav ? '★' : '☆'}</button>`;
+    if (id.startsWith('nota_')){
+      const nid = id.slice(5);
+      h += `<button class="btn ghost" data-nedit="${esc(nid)}" type="button" title="Editar">✏️</button>
+            <button class="btn ghost" data-ndup="${esc(nid)}" type="button" title="Duplicar">⧉</button>
+            <button class="btn ghost" data-ndel="${esc(nid)}" type="button" title="Excluir">🗑</button>`;
+    }
+    acts.insertAdjacentHTML('beforeend', h);
+    if (n && c.firstElementChild) c.firstElementChild.insertAdjacentHTML('beforeend', `<span class="uso-pill" title="Vezes que você copiou">×${n}</span>`);
+  });
+}
+/* captura antes do clique de "copiar" do card */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-fav],[data-nedit],[data-ndup],[data-ndel]'); if (!b) return;
+  e.stopPropagation();
+  if (!P()) return;
+  if (b.dataset.fav){
+    const id = b.dataset.fav, f = (P().favoritos || []).slice(), i = f.indexOf(id);
+    i > -1 ? f.splice(i, 1) : f.push(id);
+    Core.salvarPerfil({ favoritos: f }); render();
+  }
+  else if (b.dataset.nedit) openNotas(b.dataset.nedit);
+  else if (b.dataset.ndup) duplicarNota(b.dataset.ndup);
+  else removerNota(b.dataset.ndel);
+}, true);
+
+/* =============== campos variáveis: {nome}, {data}, {operador} =============== */
+const VAR_RE = /\{([A-Za-zÀ-ÿ0-9_ ]{1,30})\}/g;
+const AUTO = { data: () => new Date().toLocaleDateString('pt-BR'), operador: () => (P() && P().nome) || '' };
+const autoVal = v => (AUTO[UI.norm(v)] ? AUTO[UI.norm(v)]() : '');
+function variaveis(t){ const s = new Set(); t.replace(VAR_RE, (m, v) => { s.add(v.trim()); return m; }); return [...s]; }
+const preencher = (t, vals) => t.replace(VAR_RE, (m, v) => { v = v.trim(); return (v in vals) ? vals[v] : (autoVal(v) || m); });
+
+/* contador de cópias: na conta de quem entrou; para visitantes, só neste navegador */
+const usosAtuais = () => (P() ? (P().usos || {}) : (UI.store.get('rr_usos', {}) || {}));
+function registrarUso(id){
+  const u = Object.assign({}, usosAtuais()); u[id] = (u[id] || 0) + 1;
+  if (P()) Core.salvarPerfil({ usos: u }); else UI.store.set('rr_usos', u);
+  render();
+}
+copyItem = function(id){
+  const it = byId[id]; if (!it) return;
+  const falta = variaveis(it.text).filter(v => !autoVal(v));
+  const fim = vals => { UI.copy(preencher(it.text, vals), 'Copiado: ' + it.label); use(id); registrarUso(id); };
+  if (!falta.length) return fim({});
+  setTimeout(() => {                      /* depois de qualquer janela que esteja fechando */
+    const m = UI.openModal({
+      title: 'Preencher campos', sub: it.label,
+      html: `<form id="varForm" novalidate>${falta.map(v => `<label class="au-f"><span>${esc(v)}</span><input class="au-plain" data-v="${esc(v)}" autocomplete="off"></label>`).join('')}
+        <button class="btn" type="submit">📋 Copiar</button></form>`
+    });
+    const f = q('#varForm', m.body); q('input', f).focus();
+    f.onsubmit = ev => {
+      ev.preventDefault(); const vals = {};
+      qa('input', f).forEach(i => vals[i.dataset.v] = i.value.trim() || '{' + i.dataset.v + '}');
+      UI.closeModal(); fim(vals);
+    };
+  }, 0);
+};
+
+/* =============== anotações pessoais: carregar / excluir / duplicar =============== */
+async function loadNotes(){
+  try { notes = await B().list(); } catch (e) { notes = []; UI.toast(erroMsg(e), 'err'); }
+}
+async function loadShared(){
+  try { shared = Object.fromEntries((await B().listShared()).map(d => [d.id, d])); }
+  catch (e) { shared = {}; UI.toast(erroMsg(e), 'err'); }
+}
+async function removerNota(id){
+  const x = notes.find(y => y.id === id);
+  if (!x || !confirm('Excluir a anotação "' + x.titulo + '"?')) return false;
+  try {
+    await B().del(x.id); await loadNotes();
+    const nid = 'nota_' + id;
+    Core.salvarPerfil({ favoritos: (P().favoritos || []).filter(f => f !== nid), ordem: (P().ordem || []).filter(o => o !== id) });
+    rebuild(); UI.toast('Anotação excluída'); return true;
+  } catch (e) { UI.toast(erroMsg(e), 'err'); return false; }
+}
+async function duplicarNota(id){
+  const x = notes.find(y => y.id === id); if (!x) return false;
+  const suf = ' (cópia)', titulo = (x.titulo.length + suf.length > 80 ? x.titulo.slice(0, 80 - suf.length) : x.titulo) + suf;
+  try { await B().save({ titulo, texto: x.texto, categoria: x.categoria }); await loadNotes(); rebuild(); UI.toast('Anotação duplicada'); return true; }
+  catch (e) { UI.toast(erroMsg(e), 'err'); return false; }
+}
+
+/* =============== janela "Anotações" (＋ Nova anotação) =============== */
+const catsOrdenadas = list => [...new Set(list)].sort((a, b) => a === '' ? -1 : b === '' ? 1 : a.localeCompare(b, 'pt-BR'));
+
+function openNotas(editing){
+  const m = UI.openModal({ title: 'Anotações', sub: Core.usuarioDe(P()), size: 'wide', html: '<div id="auBody"></div>' });
+  tabNotas(q('#auBody', m.body), editing);
+}
+function avisoEntrar(){
+  UI.openModal({
+    title: 'Entre para criar anotações',
+    html: '<p class="au-sub" style="margin:0">Qualquer pessoa pode ver e copiar as mensagens prontas desta página. Para criar anotações próprias, é preciso entrar com o seu usuário no <b>Painel de Controle</b>.</p>',
+    foot: '<a class="btn" href="painel.html">⚙️ Ir para o Painel de Controle</a>'
+  });
+}
+
+function tabNotas(box, editing){
+  const n = editing && notes.find(x => x.id === editing);
+  const by = {}; sortedNotes().forEach(x => { const c = (x.categoria || '').trim(); (by[c] = by[c] || []).push(x); });
+  const keys = catsOrdenadas(Object.keys(by));
+  const item = (x, i, len) => `<div class="au-item" draggable="true" data-id="${esc(x.id)}">
+      <span class="au-grip" title="Arraste para reordenar">⋮⋮</span>
+      <div class="au-main"><b>${esc(x.titulo)}</b><small>${esc(x.texto.replace(/\s+/g, ' '))}</small></div>
+      <div class="au-acts">
+        <button class="btn ghost" data-up="${esc(x.id)}" type="button" title="Mover para cima" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button class="btn ghost" data-down="${esc(x.id)}" type="button" title="Mover para baixo" ${i === len - 1 ? 'disabled' : ''}>▼</button>
+        <button class="btn ghost" data-ed="${esc(x.id)}" type="button">✏️ Editar</button>
+        <button class="btn ghost" data-dup="${esc(x.id)}" type="button">⧉ Duplicar</button>
+        <button class="btn ghost" data-rm="${esc(x.id)}" type="button">🗑 Excluir</button>
+      </div></div>`;
+  box.innerHTML = `
+    <div class="au-list">${notes.length ? keys.map(c => (keys.length > 1 || c ? `<div class="au-cat">${esc(c || 'Sem categoria')}</div>` : '') + by[c].map((x, i) => item(x, i, by[c].length)).join('')).join('')
+      : '<div class="au-empty">Você ainda não tem anotações. Crie a primeira no formulário abaixo.</div>'}</div>
+    <hr class="au-sep">
+    <div class="au-msg" id="nMsg" role="alert"></div>
+    <label class="au-f"><span>${n ? 'Editar anotação' : 'Nova anotação'} — título</span><input class="au-plain" id="nTit" maxlength="80" value="${n ? esc(n.titulo) : ''}"></label>
+    <label class="au-f"><span>Categoria (opcional)</span><input class="au-plain" id="nCat" maxlength="40" list="catList" value="${n ? esc(n.categoria || '') : ''}" placeholder="Ex.: Convênios, Retornos">
+      <datalist id="catList">${keys.filter(Boolean).map(c => `<option value="${esc(c)}">`).join('')}</datalist></label>
+    <label class="au-f"><span>Texto — use *texto* para negrito e {campo} para preencher na hora de copiar</span><textarea id="nTxt" maxlength="5000">${n ? esc(n.texto) : ''}</textarea></label>
+    <div style="display:flex;gap:8px"><button class="btn" id="nSave" type="button">💾 Salvar</button>
+    ${n ? '<button class="btn ghost" id="nCancel" type="button">Cancelar</button>' : ''}</div>`;
+
+  qa('[data-ed]', box).forEach(b => b.onclick = () => tabNotas(box, b.dataset.ed));
+  qa('[data-rm]', box).forEach(b => b.onclick = async () => { if (await removerNota(b.dataset.rm)) tabNotas(box); });
+  qa('[data-dup]', box).forEach(b => b.onclick = async () => { if (await duplicarNota(b.dataset.dup)) tabNotas(box); });
+  qa('[data-up]', box).forEach(b => b.onclick = () => mover(b.dataset.up, -1, box));
+  qa('[data-down]', box).forEach(b => b.onclick = () => mover(b.dataset.down, 1, box));
+  let dragId = null;
+  qa('.au-item[draggable]', box).forEach(el => {
+    el.ondragstart = e => { dragId = el.dataset.id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragId); } catch (x) {} el.classList.add('drag'); };
+    el.ondragend = () => el.classList.remove('drag');
+    el.ondragover = e => { if (dragId) e.preventDefault(); };
+    el.ondrop = e => { e.preventDefault(); if (dragId && dragId !== el.dataset.id) arrastar(dragId, el.dataset.id, box); dragId = null; };
+  });
+  if (n){ const f = q('#nTit', box); f.scrollIntoView({ block: 'center' }); f.focus(); }
+  const c = q('#nCancel', box); if (c) c.onclick = () => tabNotas(box);
+  q('#nSave', box).onclick = async () => {
+    const titulo = q('#nTit', box).value.trim(), texto = q('#nTxt', box).value.trim(), categoria = q('#nCat', box).value.trim(), msg = q('#nMsg', box);
+    if (!titulo || !texto) return showMsg(msg, 'err', 'Preencha o título e o texto da anotação.');
+    try { await B().save({ id: n && n.id, titulo, texto, categoria }); await loadNotes(); rebuild(); tabNotas(box); UI.toast('Anotação salva'); }
+    catch (e) { showMsg(msg, 'err', erroMsg(e)); }
+  };
+}
+const catDe = id => ((notes.find(x => x.id === id) || {}).categoria || '').trim();
+function novaOrdem(box, ord){ Core.salvarPerfil({ ordem: ord }); rebuild(); tabNotas(box); }
+function mover(id, dir, box){
+  const ord = sortedNotes().map(x => x.id), L = ord.filter(x => catDe(x) === catDe(id));
+  const i = L.indexOf(id), j = i + dir; if (j < 0 || j >= L.length) return;
+  const a = ord.indexOf(L[i]), b = ord.indexOf(L[j]); [ord[a], ord[b]] = [ord[b], ord[a]];
+  novaOrdem(box, ord);
+}
+function arrastar(id, alvo, box){
+  if (catDe(id) !== catDe(alvo)) return UI.toast('Só é possível reordenar dentro da mesma categoria.', 'err');
+  const ord = sortedNotes().map(x => x.id).filter(x => x !== id); ord.splice(ord.indexOf(alvo), 0, id);
+  novaOrdem(box, ord);
+}
+
+/* =============== Uso Geral (contadores de cópia) =============== */
+function abrirUso(){
+  const usos = usosAtuais(), todos = ITEMS.map(i => ({ i, n: usos[i.id] || 0 }));
+  const top = todos.filter(x => x.n).sort((a, b) => b.n - a.n).slice(0, 10);
+  const max = top.length ? top[0].n : 1, total = todos.reduce((s, x) => s + x.n, 0);
+  const m = UI.openModal({
+    title: '📊 Uso Geral', sub: P() ? 'Conta: ' + Core.usuarioDe(P()) : 'Contagem guardada só neste navegador', size: 'wide',
+    html: `<p class="au-sub" style="margin-top:0">Quantas vezes <b>você</b> copiou cada mensagem. Total de cópias: <b>${total}</b>.</p>
+      <div class="au-cat">Mais usadas</div>
+      ${top.length ? top.map(x => `<div class="au-bar"><span>${esc(x.i.label)}</span><div><i style="width:${Math.max(6, x.n / max * 100)}%"></i></div><b>${x.n}</b></div>`).join('') : '<div class="au-empty">Ainda não há cópias registradas.</div>'}
+      <div style="margin-top:18px"><button class="btn ghost" id="uZero" type="button">Zerar contadores</button></div>`
+  });
+  q('#uZero', m.body).onclick = () => {
+    if (!confirm('Zerar todos os contadores de uso?')) return;
+    if (P()) Core.salvarPerfil({ usos: {} }); else UI.store.set('rr_usos', {});
+    render(); abrirUso();
+  };
+}
+
+/* =============== botões da barra de ferramentas =============== */
+(function(){
+  const tb = q('.toolbar');
+  const add = document.createElement('button');
+  add.className = 'btn nova-nota'; add.type = 'button'; add.textContent = '＋ Nova anotação';
+  add.onclick = () => { if (P()) openNotas(); else avisoEntrar(); };
+  const uso = document.createElement('button');
+  uso.className = 'btn ghost uso-btn'; uso.type = 'button'; uso.textContent = '📊 Uso Geral';
+  uso.onclick = abrirUso;
+  tb.appendChild(add); tb.appendChild(uso);
+})();
+
+/* =============== quem entrou / saiu (o login fica no Painel de Controle) =============== */
+async function aoMudar(st){
+  if (st.logado) await Promise.all([loadShared(), loadNotes()]);
+  else { notes = []; shared = {}; }
+  rebuild();
+  if (st.logado && P().senhaTemp) UI.toast('Você está com uma senha temporária. Defina uma nova no Painel de Controle.');
+}
+Core.init({ allowCreate: false, onChange: aoMudar });
+})();
+</script>
+</body>
+</html>
