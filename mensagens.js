@@ -272,13 +272,12 @@ Por sermos um hospital voltado ao diagnóstico de neoplasias malignas, a triagem
 
 Contamos com a sua compreensão e qualquer dúvida, pode retornar o contato conosco, estamos à disposição.`,
 
-    solicitarpendencia: `ENCAIXE
-
-NOME: 
+    solicitarpendencia: `Nome: 
 CPF: 
-CTT: 
+Contato: 
+Divisão: 
 
-Motivo: `,
+Obs: `,
 
     contatopediatria: `Atendimento do setor pediátrico via WhatsApp:
 *(84) 4009-5501*
