@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
+  .slot .hrs{flex-basis:100%;width:100%;margin-top:4px;font-size:.78rem;font-weight:600;opacity:.7;letter-spacing:.2px}
+</style>
 </head>
 <body data-page="radioterapia">
 
@@ -71,6 +74,7 @@
 /* ============ DADOS ============
    d: 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex | t: M=Manhã T=Tarde
    n: novos | k: controles (null = sem vaga de controle)
+   h: (opcional) horários dos atendimentos, em ordem. Ex.: h:['07:30','07:50','08:10']
    Para alterar a agenda, edite apenas esta lista.            */
 const SLOTS = [
   // SUS
@@ -183,6 +187,12 @@ function renderWeek(list){
     `<button data-d="${d}" class="${d===state.day?'active':''}">${DAYS_SHORT[d]}${d===todayIdx?' •':''}</button>`).join('');
 }
 
+/* ---------- horários dos atendimentos (linha discreta, só aparece se houver "h") ---------- */
+function horariosHTML(s){
+  if(!s.h || !s.h.length) return '';
+  return `<div class="hrs" title="Horários dos atendimentos">🕐 ${s.h.map(x=>UI.esc(x)).join(' · ')}</div>`;
+}
+
 /* ---------- por médico ---------- */
 function doctorCard(name, slots){
   const mine = slots.filter(s=>s.m===name).sort((a,b)=> a.d-b.d || (a.t<b.t?-1:1));   // manhã antes da tarde
@@ -194,6 +204,7 @@ function doctorCard(name, slots){
         ${s.n==null ? '' : `<div class="num"><b>${s.n}</b><small>novos</small></div>`}
         ${s.k==null ? '' : `<div class="num"><b>${s.k}</b><small>contr.</small></div>`}
       </div>
+      ${horariosHTML(s)}
     </div>`).join('');
   return `<article class="mcard">
     <div class="mhead"><div class="avatar">${UI.esc(UI.initial(name))}</div><div><h3>${UI.esc(name)}</h3><small>${cats}</small></div></div>
