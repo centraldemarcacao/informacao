@@ -9,14 +9,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .clk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:6px;border-radius:50%;font-size:.8rem;line-height:1;cursor:pointer;vertical-align:middle;background:rgba(100,116,139,.14);transition:background .15s,transform .15s}
-  .clk:hover{background:rgba(100,116,139,.3);transform:scale(1.1)}
-  .tmodal .slot{flex-wrap:wrap}
-  .tmodal .tm{flex:0 0 100%;grid-column:1/-1;width:100%;box-sizing:border-box;margin-top:8px;padding-top:10px;border-top:1px dashed rgba(100,116,139,.3);display:grid;grid-template-columns:max-content 1fr;column-gap:14px;row-gap:6px;align-items:baseline;font-size:.84rem;line-height:1.5}
-  .tmodal .tm div{display:contents}
-  .tmodal .tm b{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;opacity:.65;white-space:nowrap}
-  .tmodal .tm span{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-  @media (max-width:420px){.tmodal .tm span{white-space:normal}}
+  /* ícone de relógio (indicador de que há horários) */
+  .clk{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:rgba(100,116,139,.14);color:inherit;opacity:.8;vertical-align:middle;transition:background .15s,opacity .15s}
+  .clk svg{display:block}
+  .doc:hover .clk,.mcard.clickable:hover .clk{background:rgba(100,116,139,.28);opacity:1}
+  /* linha do nome nos cards da semana: nome + relógio à esquerda, etiqueta à direita */
+  .doc .n{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+  .doc .nm{display:inline-flex;align-items:center;gap:6px;min-width:0}
+  .doc .n .tag{margin-left:auto;white-space:nowrap;flex:0 0 auto}
+  .mhead h3{display:flex;align-items:center;gap:8px}
+  .mcard.clickable{cursor:pointer}
+  /* horários dentro de cada turno do card do médico */
+  .slot{flex-wrap:wrap}
+  .slot .tm{flex:0 0 100%;grid-column:1/-1;width:100%;box-sizing:border-box;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(100,116,139,.3);display:grid;grid-template-columns:max-content 1fr;column-gap:14px;row-gap:8px;align-items:start}
+  .slot .tm .tr{display:contents}
+  .slot .tm .tl{padding-top:3px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.65;white-space:nowrap}
+  .slot .tm .tv{display:flex;flex-wrap:wrap;gap:5px}
+  .slot .tm .t{display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(100,116,139,.12);font-size:.78rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.5}
 </style>
 </head>
 <body data-page="radioterapia">
@@ -95,7 +104,6 @@ const SLOTS = [
   {m:'Wellinton',c:'sus', d:5, t:'M', n:5, k:6, h:{n:['08:00','08:30','09:00','09:30','10:00'], k:['10:30','10:50','11:10','11:30','11:50','12:10']}},
   {m:'Juliana',  c:'sus', d:4, t:'M', n:null, k:5, h:{k:['10:30','10:50','11:10','11:30','11:50','12:10']}},
   {m:'Guilherme',c:'sus', d:2, t:'M', n:5, k:6, h:{n:['08:00','08:30','09:00','09:30','10:00'], k:['10:30','10:50','11:10','11:30','11:50','12:10']}},
-  
   // Convênio
   {m:'Leonardo', c:'convenio', d:2, t:'T', n:5, k:5, h:{n:['14:00','14:30','15:00','15:30','16:00'], k:['16:30','16:50','17:10','17:30','17:50']}},
   {m:'Edilmar',  c:'convenio', d:2, t:'M', n:5, k:6, h:{n:['08:00','08:30','09:00','09:30','10:00'], k:['10:30','10:50','11:10','11:30','11:50','12:10']}},
@@ -105,7 +113,7 @@ const SLOTS = [
   {m:'Igor',     c:'convenio', d:1, t:'T', n:5, k:5, h:{n:['14:00','14:30','15:00','15:30','16:00'], k:['16:30','16:50','17:10','17:30','17:50']}},
   {m:'Wellinton',c:'convenio', d:5, t:'T', n:5, k:5, h:{n:['14:00','14:30','15:00','15:30','16:00'], k:['16:30','16:50','17:10','17:30','17:50']}},
   {m:'Juliana',  c:'convenio', d:1, t:'M', n:5, k:6, h:{n:['07:30','08:00','08:30','09:00','09:30'], k:['10:00','10:20','10:40','11:00','11:20','11:40']}},
-  {m:'Juliana',  c:'convenio', d:4, t:'T', n:4, k:null, h:{n:['14:00','14:30','15:00','15:30']]}},
+  {m:'Juliana',  c:'convenio', d:4, t:'T', n:4, k:null, h:{n:['14:00','14:30','15:00','15:30']}},
   {m:'Guilherme',c:'convenio', d:3, t:'M', n:3, k:4, h:{n:['09:30','10:00','10:30'], k:['11:00','11:20','11:40','12:00']}},
   // Residentes
   {m:'Vivian',   c:'residentes', d:5, t:'M', n:4, k:4, h:{n:['08:40','09:20','10:00','10:40'], k:['11:20','11:40','12:00','12:20']}},
@@ -167,7 +175,7 @@ function docHTML(s){
   if(s.n!=null) parts.push(`<b>${s.n}</b> novos`);
   if(s.k!=null) parts.push(`<b>${s.k}</b> controles`);
   return `<button class="doc cat-${s.c}" data-m="${UI.esc(s.m)}">
-    <div class="n">${UI.esc(s.m)}${clockHTML(s)}<span class="tag">${CATS[s.c]}</span></div>
+    <div class="n"><span class="nm">${UI.esc(s.m)}${clockHTML(s)}</span><span class="tag">${CATS[s.c]}</span></div>
     <div class="v">${parts.join(' · ') || 'Sem vagas'}</div>
   </button>`;
 }
@@ -195,39 +203,22 @@ function renderWeek(list){
     `<button data-d="${d}" class="${d===state.day?'active':''}">${DAYS_SHORT[d]}${d===todayIdx?' •':''}</button>`).join('');
 }
 
-/* ---------- horários dos atendimentos (ícone de relógio + janela) ---------- */
-const hasH = s => !!(s.h && (Array.isArray(s.h) ? s.h.length : ((s.h.n&&s.h.n.length)||(s.h.k&&s.h.k.length))));
-const hList = a => (a||[]).map(x=>UI.esc(x)).join(' · ');
-
-function clockHTML(s){
-  if(!hasH(s)) return '';
-  return `<span class="clk" role="button" tabindex="0" title="Ver horários" data-clk="${SLOTS.indexOf(s)}">🕐</span>`;
-}
+/* ---------- horários dos atendimentos ---------- */
+const CLOCK_SVG = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const hasH = s => !!(s.h && ((s.h.n&&s.h.n.length)||(s.h.k&&s.h.k.length)));
+const chips = a => a.map(x=>`<span class="t">${UI.esc(x)}</span>`).join('');
+const clockHTML = s => hasH(s) ? `<span class="clk" title="Horários de atendimento">${CLOCK_SVG}</span>` : '';
 
 function timesRows(s){
-  if(Array.isArray(s.h)) return `<div><b>Horários</b><span>${hList(s.h)}</span></div>`;
-  return (s.h.n&&s.h.n.length ? `<div><b>Novos</b><span>${hList(s.h.n)}</span></div>` : '')
-       + (s.h.k&&s.h.k.length ? `<div><b>Controles</b><span>${hList(s.h.k)}</span></div>` : '');
+  const row = (label, arr) => (arr&&arr.length) ? `<div class="tr"><span class="tl">${label}</span><span class="tv">${chips(arr)}</span></div>` : '';
+  return row('Novos', s.h.n) + row('Controles', s.h.k);
 }
-
-function timesCard(name, list){
-  const rows = list.filter(hasH).map(s=>`
-    <div class="slot cat-${s.c}">
-      <div class="when"><span class="pill">${CATS[s.c]}</span><strong>${DAYS[s.d]}</strong><span>${SHIFT[s.t].ico} ${SHIFT[s.t].label}</span></div>
-      <div class="tm">${timesRows(s)}</div>
-    </div>`).join('');
-  return `<article class="mcard tmodal">
-    <div class="mhead"><div class="avatar">🕐</div><div><h3>${UI.esc(name)}</h3><small>Horários de atendimento</small></div></div>
-    <div class="slots">${rows || '<div class="empty">Horários não cadastrados</div>'}</div>
-  </article>`;
-}
-
-function openTimes(name, list){ UI.openModal({ bare:true, html: timesCard(name, list) }); }
 
 /* ---------- por médico ---------- */
-function doctorCard(name, slots){
+function doctorCard(name, slots, clickable){
   const mine = slots.filter(s=>s.m===name).sort((a,b)=> a.d-b.d || (a.t<b.t?-1:1));   // manhã antes da tarde
   const cats = [...new Set(mine.map(s=>CATS[s.c]))].join(' · ');
+  const anyH = mine.some(hasH);
   const rows = mine.map(s=>`
     <div class="slot cat-${s.c}">
       <div class="when"><span class="pill">${CATS[s.c]}</span><strong>${DAYS[s.d]}</strong><span>${SHIFT[s.t].ico} ${SHIFT[s.t].label}</span></div>
@@ -235,9 +226,10 @@ function doctorCard(name, slots){
         ${s.n==null ? '' : `<div class="num"><b>${s.n}</b><small>novos</small></div>`}
         ${s.k==null ? '' : `<div class="num"><b>${s.k}</b><small>contr.</small></div>`}
       </div>
+      ${hasH(s) ? `<div class="tm">${timesRows(s)}</div>` : ''}
     </div>`).join('');
-  return `<article class="mcard">
-    <div class="mhead"><div class="avatar">${UI.esc(UI.initial(name))}</div><div><h3>${UI.esc(name)}${mine.some(hasH) ? `<span class="clk" role="button" tabindex="0" title="Ver horários" data-clkdoc="${UI.esc(name)}">🕐</span>` : ''}</h3><small>${cats}</small></div></div>
+  return `<article class="mcard${clickable?' clickable':''}" ${clickable?`data-m="${UI.esc(name)}" tabindex="0" role="button" aria-label="Abrir ${UI.esc(name)}"`:''}>
+    <div class="mhead"><div class="avatar">${UI.esc(UI.initial(name))}</div><div><h3>${UI.esc(name)}${anyH ? `<span class="clk" title="Horários de atendimento">${CLOCK_SVG}</span>` : ''}</h3><small>${cats}</small></div></div>
     <div class="slots">${rows}</div>
     <div class="mfoot"><span><b>${plural(mine.length,'turno','turnos')}</b>/semana</span><span><b>${sum(mine,s=>s.n)}</b> novos · <b>${sum(mine,s=>s.k)}</b> controles</span></div>
   </article>`;
@@ -246,7 +238,7 @@ function doctorCard(name, slots){
 function renderMedicos(list){
   const names = [...new Set(list.map(s=>s.m))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   $('viewMedicos').innerHTML = names.length
-    ? names.map(n=>doctorCard(n,list)).join('')
+    ? names.map(n=>doctorCard(n,list,true)).join('')
     : '<div class="nothing"><big>🔎</big>Nenhum médico encontrado</div>';
 }
 
@@ -280,20 +272,22 @@ $('dayTabs').addEventListener('click', e=>{
   state.day = +b.dataset.d; renderWeek(filtered());
 });
 
-function clkHandler(e){
-  const c = e.target.closest('.clk'); if(!c) return false;
-  e.stopPropagation(); e.preventDefault();
-  if(c.dataset.clk!==undefined){ const s = SLOTS[+c.dataset.clk]; openTimes(s.m, [s]); }
-  else openTimes(c.dataset.clkdoc, SLOTS.filter(s=>s.m===c.dataset.clkdoc).sort((a,b)=>a.d-b.d||(a.t<b.t?-1:1)));
-  return true;
-}
-document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && e.target.classList && e.target.classList.contains('clk')) clkHandler(e); });
-$('viewMedicos').addEventListener('click', clkHandler);
+/* Um único card do médico: clicar no card, no nome ou no relógio abre a mesma janela */
+const openDoctor = name => UI.openModal({ bare:true, html: doctorCard(name, SLOTS) });   // sempre mostra todos os turnos e horários do médico
 
 $('week').addEventListener('click', e=>{
-  if(clkHandler(e)) return;
   const d = e.target.closest('.doc'); if(!d) return;
-  UI.openModal({ bare:true, html: doctorCard(d.dataset.m, SLOTS) });   // sempre mostra todos os horários do médico
+  openDoctor(d.dataset.m);
+});
+
+$('viewMedicos').addEventListener('click', e=>{
+  const c = e.target.closest('.mcard[data-m]'); if(!c) return;
+  openDoctor(c.dataset.m);
+});
+$('viewMedicos').addEventListener('keydown', e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  const c = e.target.closest('.mcard[data-m]'); if(!c) return;
+  e.preventDefault(); openDoctor(c.dataset.m);
 });
 
 renderToday();
