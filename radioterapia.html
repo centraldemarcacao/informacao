@@ -151,10 +151,12 @@ function renderKpis(list){
 
 /* ---------- visão semanal ---------- */
 function docHTML(s){
-  const k = s.k==null ? '' : ` · <b>${s.k}</b> controles`;
+  const parts = [];
+  if(s.n!=null) parts.push(`<b>${s.n}</b> novos`);
+  if(s.k!=null) parts.push(`<b>${s.k}</b> controles`);
   return `<button class="doc cat-${s.c}" data-m="${UI.esc(s.m)}">
     <div class="n">${UI.esc(s.m)}<span class="tag">${CATS[s.c]}</span></div>
-    <div class="v"><b>${s.n}</b> novos${k}</div>
+    <div class="v">${parts.join(' · ') || 'Sem vagas'}</div>
   </button>`;
 }
 
@@ -189,7 +191,7 @@ function doctorCard(name, slots){
     <div class="slot cat-${s.c}">
       <div class="when"><span class="pill">${CATS[s.c]}</span><strong>${DAYS[s.d]}</strong><span>${SHIFT[s.t].ico} ${SHIFT[s.t].label}</span></div>
       <div class="nums">
-        <div class="num"><b>${s.n}</b><small>novos</small></div>
+        ${s.n==null ? '' : `<div class="num"><b>${s.n}</b><small>novos</small></div>`}
         ${s.k==null ? '' : `<div class="num"><b>${s.k}</b><small>contr.</small></div>`}
       </div>
     </div>`).join('');
