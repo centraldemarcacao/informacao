@@ -9,8 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .slot{flex-wrap:wrap}
-  .slot .hrs{flex:0 0 100%;grid-column:1/-1;order:3;width:100%;box-sizing:border-box;margin-top:6px;padding-top:8px;border-top:1px dashed rgba(100,116,139,.3);font-size:.78rem;font-weight:600;opacity:.75;letter-spacing:.2px;line-height:1.5}
+  .clk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:6px;border-radius:50%;font-size:.8rem;line-height:1;cursor:pointer;vertical-align:middle;background:rgba(100,116,139,.14);transition:background .15s,transform .15s}
+  .clk:hover{background:rgba(100,116,139,.3);transform:scale(1.1)}
+  .tmodal .slot{flex-wrap:wrap}
+  .tmodal .tm{flex:0 0 100%;grid-column:1/-1;width:100%;box-sizing:border-box;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(100,116,139,.3);font-size:.82rem;line-height:1.6}
+  .tmodal .tm div{display:flex;gap:8px;align-items:baseline}
+  .tmodal .tm b{min-width:68px;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;opacity:.65}
+  .tmodal .tm span{font-weight:600}
 </style>
 </head>
 <body data-page="radioterapia">
@@ -75,11 +80,11 @@
 /* ============ DADOS ============
    d: 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex | t: M=Manhã T=Tarde
    n: novos | k: controles (null = sem vaga de controle)
-   h: (opcional) horários dos atendimentos, em ordem. Ex.: h:['07:30','07:50','08:10']
+   h: (opcional) horários. Separado: h:{n:['07:30','07:50'], k:['09:00','09:20']}  |  ou lista única: h:['07:30','07:50','08:10']
    Para alterar a agenda, edite apenas esta lista.            */
 const SLOTS = [
   // SUS
-  {m:'Leonardo', c:'sus', d:2, t:'M', n:5, k:6},
+  {m:'Leonardo', c:'sus', d:2, t:'M', n:5, k:6, h:['08:00','08:30','09:00','09:30','10:00','10:30','10:50','11:10','11:30','11:50','12:10']},
   {m:'Edilmar',  c:'sus', d:4, t:'M', n:5, k:6},
   {m:'Andrea',   c:'sus', d:2, t:'M', n:5, k:6},
   {m:'Andrea',   c:'sus', d:3, t:'M', n:4, k:4},
@@ -160,7 +165,7 @@ function docHTML(s){
   if(s.n!=null) parts.push(`<b>${s.n}</b> novos`);
   if(s.k!=null) parts.push(`<b>${s.k}</b> controles`);
   return `<button class="doc cat-${s.c}" data-m="${UI.esc(s.m)}">
-    <div class="n">${UI.esc(s.m)}<span class="tag">${CATS[s.c]}</span></div>
+    <div class="n">${UI.esc(s.m)}${clockHTML(s)}<span class="tag">${CATS[s.c]}</span></div>
     <div class="v">${parts.join(' · ') || 'Sem vagas'}</div>
   </button>`;
 }
@@ -188,11 +193,34 @@ function renderWeek(list){
     `<button data-d="${d}" class="${d===state.day?'active':''}">${DAYS_SHORT[d]}${d===todayIdx?' •':''}</button>`).join('');
 }
 
-/* ---------- horários dos atendimentos (linha discreta, só aparece se houver "h") ---------- */
-function horariosHTML(s){
-  if(!s.h || !s.h.length) return '';
-  return `<div class="hrs" title="Horários dos atendimentos">🕐 ${s.h.map(x=>UI.esc(x)).join(' · ')}</div>`;
+/* ---------- horários dos atendimentos (ícone de relógio + janela) ---------- */
+const hasH = s => !!(s.h && (Array.isArray(s.h) ? s.h.length : ((s.h.n&&s.h.n.length)||(s.h.k&&s.h.k.length))));
+const hList = a => (a||[]).map(x=>UI.esc(x)).join(' · ');
+
+function clockHTML(s){
+  if(!hasH(s)) return '';
+  return `<span class="clk" role="button" tabindex="0" title="Ver horários" data-clk="${SLOTS.indexOf(s)}">🕐</span>`;
 }
+
+function timesRows(s){
+  if(Array.isArray(s.h)) return `<div><b>Horários</b><span>${hList(s.h)}</span></div>`;
+  return (s.h.n&&s.h.n.length ? `<div><b>Novos</b><span>${hList(s.h.n)}</span></div>` : '')
+       + (s.h.k&&s.h.k.length ? `<div><b>Controles</b><span>${hList(s.h.k)}</span></div>` : '');
+}
+
+function timesCard(name, list){
+  const rows = list.filter(hasH).map(s=>`
+    <div class="slot cat-${s.c}">
+      <div class="when"><span class="pill">${CATS[s.c]}</span><strong>${DAYS[s.d]}</strong><span>${SHIFT[s.t].ico} ${SHIFT[s.t].label}</span></div>
+      <div class="tm">${timesRows(s)}</div>
+    </div>`).join('');
+  return `<article class="mcard tmodal">
+    <div class="mhead"><div class="avatar">🕐</div><div><h3>${UI.esc(name)}</h3><small>Horários de atendimento</small></div></div>
+    <div class="slots">${rows || '<div class="empty">Horários não cadastrados</div>'}</div>
+  </article>`;
+}
+
+function openTimes(name, list){ UI.openModal({ bare:true, html: timesCard(name, list) }); }
 
 /* ---------- por médico ---------- */
 function doctorCard(name, slots){
@@ -205,10 +233,9 @@ function doctorCard(name, slots){
         ${s.n==null ? '' : `<div class="num"><b>${s.n}</b><small>novos</small></div>`}
         ${s.k==null ? '' : `<div class="num"><b>${s.k}</b><small>contr.</small></div>`}
       </div>
-      ${horariosHTML(s)}
     </div>`).join('');
   return `<article class="mcard">
-    <div class="mhead"><div class="avatar">${UI.esc(UI.initial(name))}</div><div><h3>${UI.esc(name)}</h3><small>${cats}</small></div></div>
+    <div class="mhead"><div class="avatar">${UI.esc(UI.initial(name))}</div><div><h3>${UI.esc(name)}${mine.some(hasH) ? `<span class="clk" role="button" tabindex="0" title="Ver horários" data-clkdoc="${UI.esc(name)}">🕐</span>` : ''}</h3><small>${cats}</small></div></div>
     <div class="slots">${rows}</div>
     <div class="mfoot"><span><b>${plural(mine.length,'turno','turnos')}</b>/semana</span><span><b>${sum(mine,s=>s.n)}</b> novos · <b>${sum(mine,s=>s.k)}</b> controles</span></div>
   </article>`;
@@ -251,7 +278,18 @@ $('dayTabs').addEventListener('click', e=>{
   state.day = +b.dataset.d; renderWeek(filtered());
 });
 
+function clkHandler(e){
+  const c = e.target.closest('.clk'); if(!c) return false;
+  e.stopPropagation(); e.preventDefault();
+  if(c.dataset.clk!==undefined){ const s = SLOTS[+c.dataset.clk]; openTimes(s.m, [s]); }
+  else openTimes(c.dataset.clkdoc, SLOTS.filter(s=>s.m===c.dataset.clkdoc).sort((a,b)=>a.d-b.d||(a.t<b.t?-1:1)));
+  return true;
+}
+document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && e.target.classList && e.target.classList.contains('clk')) clkHandler(e); });
+$('viewMedicos').addEventListener('click', clkHandler);
+
 $('week').addEventListener('click', e=>{
+  if(clkHandler(e)) return;
   const d = e.target.closest('.doc'); if(!d) return;
   UI.openModal({ bare:true, html: doctorCard(d.dataset.m, SLOTS) });   // sempre mostra todos os horários do médico
 });
