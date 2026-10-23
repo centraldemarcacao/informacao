@@ -8,9 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<style>
-.nova-nota{margin-left:auto}
-</style>
 </head>
 <body data-page="anotacoes">
 
@@ -85,7 +82,7 @@ function renderRecent(){
   box.classList.toggle('hidden', !recent.length);
   box.innerHTML = '<span class="chips-label">Recentes</span>' + recent.map(id =>
     `<button class="chip" data-copy="${UI.esc(id)}" type="button" title="Copiar novamente">${UI.esc(byId[id].label)}</button>`).join('') +
-    '<button class="btn ghost" id="clearRecent" type="button" style="margin-left:auto">Limpar</button>';
+    '<button class="btn ghost u01" id="clearRecent" type="button">Limpar</button>';
 }
 
 function renderChips(){
@@ -97,7 +94,7 @@ function renderChips(){
 function card(it){
   const now = it.id === NOW_ID ? '<span class="count-pill" style="--c:#2e7d32;--bg-c:#e8f5e9">Sugerida agora</span>' : '';
   return `<article class="tpl" style="${cvars(it.g)}" data-copy="${UI.esc(it.id)}" tabindex="0" role="button" aria-label="Copiar ${UI.esc(it.label)}">
-    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><h3>${UI.esc(it.label)}</h3>${now}</div>
+    <div class="u02"><h3>${UI.esc(it.label)}</h3>${now}</div>
     <p class="prev">${UI.esc(clean(it.text))}</p>
     <div class="acts">
       <button class="btn" data-copy="${UI.esc(it.id)}" type="button">📋 Copiar</button>
@@ -328,7 +325,7 @@ function openNotas(editing){
 function avisoEntrar(){
   UI.openModal({
     title: 'Entre para criar anotações',
-    html: '<p class="au-sub" style="margin:0">Qualquer pessoa pode ver e copiar as mensagens prontas desta página. Para criar anotações próprias, é preciso entrar com o seu usuário no <b>Painel de Controle</b>.</p>',
+    html: '<p class="au-sub u03">Qualquer pessoa pode ver e copiar as mensagens prontas desta página. Para criar anotações próprias, é preciso entrar com o seu usuário no <b>Painel de Controle</b>.</p>',
     foot: '<a class="btn" href="painel.html">⚙️ Ir para o Painel de Controle</a>'
   });
 }
@@ -356,7 +353,7 @@ function tabNotas(box, editing){
     <label class="au-f"><span>Categoria (opcional)</span><input class="au-plain" id="nCat" maxlength="40" list="catList" value="${n ? esc(n.categoria || '') : ''}" placeholder="Ex.: Convênios, Retornos">
       <datalist id="catList">${keys.filter(Boolean).map(c => `<option value="${esc(c)}">`).join('')}</datalist></label>
     <label class="au-f"><span>Texto — use *texto* para negrito e {campo} para preencher na hora de copiar</span><textarea id="nTxt" maxlength="5000">${n ? esc(n.texto) : ''}</textarea></label>
-    <div style="display:flex;gap:8px"><button class="btn" id="nSave" type="button">💾 Salvar</button>
+    <div class="u04"><button class="btn" id="nSave" type="button">💾 Salvar</button>
     ${n ? '<button class="btn ghost" id="nCancel" type="button">Cancelar</button>' : ''}</div>`;
 
   qa('[data-ed]', box).forEach(b => b.onclick = () => tabNotas(box, b.dataset.ed));
@@ -401,10 +398,10 @@ function abrirUso(){
   const max = top.length ? top[0].n : 1, total = todos.reduce((s, x) => s + x.n, 0);
   const m = UI.openModal({
     title: '📊 Uso Geral', sub: P() ? 'Conta: ' + Core.usuarioDe(P()) : 'Contagem guardada só neste navegador', size: 'wide',
-    html: `<p class="au-sub" style="margin-top:0">Quantas vezes <b>você</b> copiou cada mensagem. Total de cópias: <b>${total}</b>.</p>
+    html: `<p class="au-sub u05">Quantas vezes <b>você</b> copiou cada mensagem. Total de cópias: <b>${total}</b>.</p>
       <div class="au-cat">Mais usadas</div>
       ${top.length ? top.map(x => `<div class="au-bar"><span>${esc(x.i.label)}</span><div><i style="width:${Math.max(6, x.n / max * 100)}%"></i></div><b>${x.n}</b></div>`).join('') : '<div class="au-empty">Ainda não há cópias registradas.</div>'}
-      <div style="margin-top:18px"><button class="btn ghost" id="uZero" type="button">Zerar contadores</button></div>`
+      <div class="u06"><button class="btn ghost" id="uZero" type="button">Zerar contadores</button></div>`
   });
   q('#uZero', m.body).onclick = () => {
     if (!confirm('Zerar todos os contadores de uso?')) return;

@@ -794,3 +794,67 @@ html[data-tema="dark"] .modal-box.wide .tg-admin .au-empty{border-color:#475569}
 /* campo "Modalidade de Atendimento" (select) com o mesmo visual dos campos de texto da triagem */
 .tg-block select.au-plain{width:100%;padding:12px 14px;border:1px solid var(--tg-line);border-radius:10px;background:var(--tg-card);color:var(--tg-ink);min-height:46px;font:inherit;font-size:.95rem;outline:none;transition:.2s}
 .tg-block select.au-plain:focus{border-color:var(--tg-blue);box-shadow:0 0 0 4px rgba(31,111,168,.15)}
+
+
+/* =====================================================================
+   ESTILOS MOVIDOS DAS PÁGINAS (antes em <style> e style="" de cada HTML)
+   ===================================================================== */
+
+/* --- anotacoes.html --- */
+body[data-page="anotacoes"] .nova-nota{margin-left:auto}
+
+/* --- radioterapia.html --- */
+/* ícone de relógio (indicador de que há horários) */
+body[data-page="radioterapia"] .clk{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:rgba(100,116,139,.14);color:inherit;opacity:.8;vertical-align:middle;transition:background .15s,opacity .15s}
+body[data-page="radioterapia"] .clk svg{display:block}
+body[data-page="radioterapia"] .doc:hover .clk,body[data-page="radioterapia"] .mcard.clickable:hover .clk{background:rgba(100,116,139,.28);opacity:1}
+/* linha do nome nos cards da semana: nome + relógio à esquerda, etiqueta à direita */
+body[data-page="radioterapia"] .doc .n{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+body[data-page="radioterapia"] .doc .nm{display:inline-flex;align-items:center;gap:6px;min-width:0}
+body[data-page="radioterapia"] .doc .n .tag{margin-left:auto;white-space:nowrap;flex:0 0 auto}
+body[data-page="radioterapia"] .mhead h3{display:flex;align-items:center;gap:8px}
+body[data-page="radioterapia"] .mcard.clickable{cursor:pointer}
+/* horários dentro de cada turno do card do médico */
+body[data-page="radioterapia"] .slot{flex-wrap:wrap}
+body[data-page="radioterapia"] .slot .tm{flex:0 0 100%;grid-column:1/-1;width:100%;box-sizing:border-box;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(100,116,139,.3);display:grid;grid-template-columns:max-content 1fr;column-gap:14px;row-gap:8px;align-items:start}
+body[data-page="radioterapia"] .slot .tm .tr{display:contents}
+body[data-page="radioterapia"] .slot .tm .tl{padding-top:3px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.65;white-space:nowrap}
+body[data-page="radioterapia"] .slot .tm .tv{display:flex;flex-wrap:wrap;gap:5px}
+body[data-page="radioterapia"] .slot .tm .t{display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(100,116,139,.12);font-size:.78rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.5}
+
+/* utilitários (substituem style="" estáticos; !important preserva a precedência do estilo inline) */
+.u01{margin-left:auto !important}
+.u02{display:flex !important;justify-content:space-between !important;gap:8px !important;align-items:flex-start !important}
+.u03{margin:0 !important}
+.u04{display:flex !important;gap:8px !important}
+.u05{margin-top:0 !important}
+.u06{margin-top:18px !important}
+.u07{color:var(--muted) !important;font-size:.82rem !important;font-weight:600 !important;margin:16px 0 0 !important}
+.u08{margin:20px !important}
+.u09{margin:-4px 0 14px !important;text-align:left !important}
+.u10{margin:14px 0 0 !important}
+.u11{margin-left:8px !important}
+.u12{max-width:460px !important}
+.u13{text-align:left !important;margin:-8px 0 12px !important}
+.u14{color:var(--vermelho) !important}
+.u15{text-align:left !important;margin:0 0 10px !important}
+.u16{max-width:420px !important}
+.u17{max-width:520px !important}
+.u18{text-align:left !important}
+.u19{margin-top:14px !important}
+.u20{margin:10px 0 !important}
+.u21{flex:1 !important;padding:10px 12px !important;border:1px solid var(--line) !important;border-radius:12px !important}
+.u22{color:var(--vermelho) !important;font-weight:700 !important}
+.u23{color:var(--laranja) !important;font-weight:700 !important}
+.u24{display:flex !important;gap:10px !important;align-items:center !important}
+.u25{margin-top:20px !important}
+.u26{white-space:pre-wrap !important;max-width:none !important}
+.u27{background:var(--sus) !important}
+.u28{background:var(--conv) !important}
+.u29{background:var(--res) !important}
+.u30{margin-bottom:0 !important}
+.u31{position:static !important;display:inline-block !important}
+.u32{margin-top:12px !important}
+.u33{flex:1 !important;margin:0 !important}
+.u34{margin-top:-6px !important}
+.u35{margin:0 0 6px !important}

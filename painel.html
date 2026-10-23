@@ -71,12 +71,12 @@ function buildGate(erro){
       <label class="au-f"><span>Confirmar senha</span><div class="au-in"><input id="auPw2" type="password" autocomplete="new-password">${eyeBtn}</div></label>
       <label class="au-f"><span>E-mail (opcional)</span><input class="au-plain" id="auMail" type="email" autocomplete="email" maxlength="120"</label>
       ${Core.rulesHTML()}
-      <p class="au-note" style="margin:-4px 0 14px;text-align:left">O usuário usa de 3 a 30 caracteres: letras minúsculas, números, ponto, hífen ou sublinhado.</p>
+      <p class="au-note u09">O usuário usa de 3 a 30 caracteres: letras minúsculas, números, ponto, hífen ou sublinhado.</p>
     </div>
     <button class="btn au-go" id="auGo" type="submit">Entrar</button>
     <button class="au-link" id="auForgot" type="button">Esqueci minha senha</button>
     <p class="au-note" id="auLegado"> </p>
-    ${B() && B().mode === 'local' ? '<p class="au-msg warn show" style="margin:14px 0 0">Modo de teste local: o banco de dados ainda não está vinculado. As contas ficam apenas neste navegador.</p>' : ''}
+    ${B() && B().mode === 'local' ? '<p class="au-msg warn show u10">Modo de teste local: o banco de dados ainda não está vinculado. As contas ficam apenas neste navegador.</p>' : ''}
   </form>`;
 
   let mode = 'in';
@@ -150,7 +150,7 @@ function atualizarTopo(){
   q('#pnSub').textContent = Core.usuarioDe(p) + ' · ' + (PAPEL[p.papel] || 'Operador');
   const al = q('#pnAlerta');
   if (p.senhaTemp){
-    al.innerHTML = '<div class="au-msg warn show">Você entrou com uma senha temporária. Defina agora uma senha nova e só sua. <button class="btn" id="pnTroca" type="button" style="margin-left:8px">🔒 Definir nova senha</button></div>';
+    al.innerHTML = '<div class="au-msg warn show">Você entrou com uma senha temporária. Defina agora uma senha nova e só sua. <button class="btn u11" id="pnTroca" type="button">🔒 Definir nova senha</button></div>';
     q('#pnTroca').onclick = () => abrir('senha');
   } else al.innerHTML = '';
 }
@@ -172,21 +172,21 @@ function abrir(k, arg){
 /* =============== Perfil =============== */
 function tabPerfil(box){
   const p = Core.perfil, tema = UI.tema.get();
-  box.innerHTML = `<div style="max-width:460px">
+  box.innerHTML = `<div class="u12">
     <div class="au-msg" id="fMsg" role="alert"></div>
     <div class="au-f"><span>Usuário (para entrar)</span><b>${esc(Core.usuarioDe(p))}</b></div>
     <label class="au-f"><span>Nome de exibição</span><input class="au-plain" id="fNome" maxlength="40" value="${esc(p.nome || '')}" placeholder="Ex.: Maria"></label>
-    <p class="au-note" style="text-align:left;margin:-8px 0 12px">O nome aparece no topo do site e substitui o campo <code>{operador}</code> nas mensagens prontas.</p>
+    <p class="au-note u13">O nome aparece no topo do site e substitui o campo <code>{operador}</code> nas mensagens prontas.</p>
     <label class="au-f"><span>E-mail (opcional)</span><input class="au-plain" id="fMail" type="email" maxlength="120" value="${esc(p.email || '')}""></label>
     <button class="btn" id="fSave" type="button">💾 Salvar dados</button>
-    <hr class="au-sep" style="margin-top:18px">
-    <div class="au-f"><span>Tema</span><div class="au-panel-tabs" style="margin:0">
+    <hr class="au-sep u06">
+    <div class="au-f"><span>Tema</span><div class="au-panel-tabs u03">
       <button type="button" data-tema="light" class="${tema === 'light' ? 'active' : ''}">☀️ Claro</button>
       <button type="button" data-tema="dark" class="${tema === 'dark' ? 'active' : ''}">🌙 Escuro</button></div></div>
     <div class="au-f"><span>Perfil de acesso</span><b>${PAPEL[p.papel] || 'Operador'}</b></div>
     <hr class="au-sep">
-    <div class="au-f"><span style="color:var(--vermelho)">Excluir minha conta</span>
-      <p class="au-note" style="text-align:left;margin:0 0 10px">Apaga o seu usuário, as suas anotações e as suas preferências. Não dá para desfazer.${Core.isGestao() ? ' <b>Gestores e administradores não podem excluir a própria conta. Peça a outra pessoa da gestão para mudar o seu perfil para operador antes.</b>' : ''}</p>
+    <div class="au-f"><span class="u14">Excluir minha conta</span>
+      <p class="au-note u15">Apaga o seu usuário, as suas anotações e as suas preferências. Não dá para desfazer.${Core.isGestao() ? ' <b>Gestores e administradores não podem excluir a própria conta. Peça a outra pessoa da gestão para mudar o seu perfil para operador antes.</b>' : ''}</p>
       <div class="au-in"><input id="fDelPw" type="password" placeholder="Digite a sua senha para confirmar" autocomplete="current-password" ${Core.isGestao() ? 'disabled' : ''}>${eyeBtn}</div></div>
     <button class="btn danger" id="fDel" type="button" ${Core.isGestao() ? 'disabled' : ''}>🗑 Excluir minha conta</button></div>`;
   const msg = q('#fMsg', box);
@@ -210,7 +210,7 @@ function tabPerfil(box){
 /* =============== Senha =============== */
 function tabSenha(box){
   const temp = !!Core.perfil.senhaTemp;
-  box.innerHTML = `<form id="pwForm" novalidate style="max-width:420px">
+  box.innerHTML = `<form class="u16" id="pwForm" novalidate>
     <div class="au-msg ${temp ? 'warn show' : ''}" id="pMsg" role="alert">${temp ? 'Você está usando a senha temporária. Escolha uma senha nova para continuar com segurança.' : ''}</div>
     <input type="text" autocomplete="username" value="${esc(Core.usuarioDe(Core.perfil))}" hidden>
     ${temp ? '' : `<label class="au-f"><span>Senha atual</span><div class="au-in"><input id="pCur" type="password" autocomplete="current-password">${eyeBtn}</div></label>`}
@@ -240,12 +240,12 @@ function tabSenha(box){
 async function tabBackup(box){
   let notes = [];
   try { notes = await B().list(); } catch (e) { box.innerHTML = `<div class="au-msg err show">${esc(erroMsg(e))}</div>`; return; }
-  box.innerHTML = `<div style="max-width:520px"><div class="au-msg" id="bMsg" role="alert"></div>
-    <p class="au-sub" style="margin-top:0">Salve as suas anotações em um arquivo ou passe-as para outra pessoa. Você tem <b>${notes.length}</b> anotação(ões).</p>
+  box.innerHTML = `<div class="u17"><div class="au-msg" id="bMsg" role="alert"></div>
+    <p class="au-sub u05">Salve as suas anotações em um arquivo ou passe-as para outra pessoa. Você tem <b>${notes.length}</b> anotação(ões).</p>
     <button class="btn" id="bExp" type="button">⬇️ Exportar minhas anotações</button>
-    <hr class="au-sep" style="margin-top:18px">
+    <hr class="au-sep u06">
     <label class="au-f"><span>Importar arquivo de anotações (.json)</span><input class="au-plain" id="bImp" type="file" accept=".json,application/json"></label>
-    <p class="au-note" style="text-align:left">As anotações importadas são <b>somadas</b> às que você já tem. As repetidas são ignoradas.</p></div>`;
+    <p class="au-note u18">As anotações importadas são <b>somadas</b> às que você já tem. As repetidas são ignoradas.</p></div>`;
   const msg = q('#bMsg', box);
   q('#bExp', box).onclick = () => {
     const data = { app: 'anotacoes', versao: 1, exportado: new Date().toISOString(),
@@ -291,17 +291,17 @@ async function tabMensagens(box, editId){
         : `${i.over ? `<button class="btn ghost" data-sres="${esc(i.id)}" type="button">♻ Restaurar original</button>` : ''}<button class="btn ghost" data-shide="${esc(i.id)}" type="button">🙈 Ocultar</button>`}
       </div></div>`;
   box.innerHTML = `
-    <p class="au-sub" style="margin-top:0">O que for alterado aqui vale para <b>todas as pessoas que entraram com usuário</b>. Quem usa o site sem logar no painel de controle vê apenas as mensagens originais do sistema.</p>
+    <p class="au-sub u05">O que for alterado aqui vale para <b>todas as pessoas que entraram com usuário</b>. Quem usa o site sem logar no painel de controle vê apenas as mensagens originais do sistema.</p>
     <div class="au-msg" id="sMsg" role="alert"></div>
     <label class="au-f"><span>${ed ? 'Editar mensagem' : 'Nova mensagem para todos'} — categoria</span>
       <input class="au-plain" id="sGrp" maxlength="60" list="grpList" value="${ed ? esc(ed.grupo) : ''}" placeholder="Ex.: Informações">
       <datalist id="grpList">${model.map(g => `<option value="${esc(g.title)}">`).join('')}</datalist></label>
     <label class="au-f"><span>Título (nome do botão)</span><input class="au-plain" id="sTit" maxlength="80" value="${ed ? esc(ed.label) : ''}"></label>
     <label class="au-f"><span>Texto — use *texto* para negrito. {campo} é preenchido na hora de copiar; {operador} e {data} entram sozinhos</span><textarea id="sTxt" maxlength="5000">${ed ? esc(ed.text) : ''}</textarea></label>
-    <div style="display:flex;gap:8px"><button class="btn" id="sSave" type="button">💾 Salvar para todos</button>${ed ? '<button class="btn ghost" id="sCancel" type="button">Cancelar</button>' : ''}</div>
-    <hr class="au-sep" style="margin-top:18px">
+    <div class="u04"><button class="btn" id="sSave" type="button">💾 Salvar para todos</button>${ed ? '<button class="btn ghost" id="sCancel" type="button">Cancelar</button>' : ''}</div>
+    <hr class="au-sep u06">
     ${model.map(g => `<div class="au-cat">${esc(g.title)}</div>${g.items.map(row).join('')}`).join('')}
-    ${ocultas.length ? `<div class="au-cat" style="margin-top:14px">Ocultas (${ocultas.length})</div>${ocultas.map(d => `<div class="au-item"><div class="au-main"><b>${esc(d.titulo)}</b><small>Oculta para todos</small></div>
+    ${ocultas.length ? `<div class="au-cat u19">Ocultas (${ocultas.length})</div>${ocultas.map(d => `<div class="au-item"><div class="au-main"><b>${esc(d.titulo)}</b><small>Oculta para todos</small></div>
       <div class="au-acts"><button class="btn ghost" data-sres="${esc(d.id)}" type="button">♻ Reexibir</button></div></div>`).join('')}` : ''}`;
   const msg = q('#sMsg', box);
   const run = async (fn, txt) => { try { await fn(); UI.toast(txt); tabMensagens(box); } catch (e) { showMsg(q('#sMsg', box), 'err', erroMsg(e)); } };
@@ -332,16 +332,16 @@ async function tabUsuarios(box){
   const opt = (v, atual) => `<option value="${v}" ${atual === v ? 'selected' : ''}>${PAPEL[v]}</option>`;
 
   box.innerHTML = `<div class="au-msg" id="uMsg" role="alert"></div>
-    <div class="au-cat" style="margin-top:0">Localizar usuário e redefinir senha</div>
-    <p class="au-sub" style="margin-top:0">Quando alguém esquecer a senha, localize o usuário abaixo e clique em <b>🔑 Senha temporária</b>. A senha passa a ser <b>${esc(SENHA_TEMP)}</b> por até ${Core.TEMP_HORAS} horas. Avise a pessoa para entrar com ela e escolher uma senha nova em seguida. Quem clicou em "Esqueci minha senha" aparece primeiro, marcado com ⚠.</p>
+    <div class="au-cat u05">Localizar usuário e redefinir senha</div>
+    <p class="au-sub u05">Quando alguém esquecer a senha, localize o usuário abaixo e clique em <b>🔑 Senha temporária</b>. A senha passa a ser <b>${esc(SENHA_TEMP)}</b> por até ${Core.TEMP_HORAS} horas. Avise a pessoa para entrar com ela e escolher uma senha nova em seguida. Quem clicou em "Esqueci minha senha" aparece primeiro, marcado com ⚠.</p>
     <input class="au-plain" id="uBusca" type="search" placeholder="Digite o usuário ou o nome para localizar…" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:12px">
     <div id="uLista"></div>
-    <hr class="au-sep" style="margin-top:18px">
+    <hr class="au-sep u06">
     <div class="au-cat">Quem pode criar conta</div>
     <label class="au-check"><input type="checkbox" id="uOpen" ${cfg.cadastroAberto ? 'checked' : ''}> Permitir que <b>qualquer pessoa</b> crie conta (desmarcado = só os usuários autorizados abaixo)</label>
-    <div class="au-tags" style="margin:10px 0">${aut.map(e => `<span>${esc(e)} <button type="button" data-aut-del="${esc(e)}" title="Remover" aria-label="Remover ${esc(e)}">×</button></span>`).join('') || '<em>Nenhum usuário autorizado ainda.</em>'}</div>
-    <div style="display:flex;gap:8px"><input class="au-plain" id="uNew" type="text" autocapitalize="none" maxlength="30" placeholder="usuario (ex.: maria.silva)" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:12px"><button class="btn" id="uAdd" type="button">＋ Autorizar</button></div>
-    <p class="au-note" style="text-align:left">A pessoa autorizada cria a conta na tela de entrada, usando exatamente esse usuário.</p>`;
+    <div class="au-tags u20">${aut.map(e => `<span>${esc(e)} <button type="button" data-aut-del="${esc(e)}" title="Remover" aria-label="Remover ${esc(e)}">×</button></span>`).join('') || '<em>Nenhum usuário autorizado ainda.</em>'}</div>
+    <div class="u04"><input class="au-plain u21" id="uNew" type="text" autocapitalize="none" maxlength="30" placeholder="usuario (ex.: maria.silva)"><button class="btn" id="uAdd" type="button">＋ Autorizar</button></div>
+    <p class="au-note u18">A pessoa autorizada cria a conta na tela de entrada, usando exatamente esse usuário.</p>`;
 
   const msg = q('#uMsg', box), ok = t => showMsg(msg, 'ok', t), err = e => showMsg(msg, 'err', erroMsg(e));
 
@@ -357,8 +357,8 @@ async function tabUsuarios(box){
         : criador ? 'A conta do criador do sistema não pode ser redefinida por outra pessoa.' : eu ? 'Para trocar a sua própria senha, use o cartão Senha.' : !podeEditar ? 'Sem permissão para esta conta.' : 'Gerar a senha temporária';
       return `<div class="au-item"><div class="au-main"><b>${esc(un(u))}${eu ? ' (você)' : ''}${criador ? ' · criador' : ''}</b>
         <small>${esc(u.nome || 'sem nome')}${u.email ? ' · ' + esc(u.email) : ''}</small>
-        ${pedido ? '<small style="color:var(--vermelho);font-weight:700">⚠ Pediu nova senha ("esqueci minha senha")</small>' : ''}
-        ${u.senhaTemp ? '<small style="color:var(--laranja);font-weight:700">Senha temporária ativa: aguardando a troca pela pessoa</small>' : ''}</div>
+        ${pedido ? '<small class="u22">⚠ Pediu nova senha ("esqueci minha senha")</small>' : ''}
+        ${u.senhaTemp ? '<small class="u23">Senha temporária ativa: aguardando a troca pela pessoa</small>' : ''}</div>
         <div class="au-acts"><select class="select" data-papel="${esc(u.uid)}" ${podeEditar ? '' : 'disabled'}>${opt('operador', u.papel)}${opt('triagem', u.papel)}${opt('gestor', u.papel)}${Core.isAdmin() ? opt('admin', u.papel) : ''}</select>
         <label class="au-check"><input type="checkbox" data-ativo="${esc(u.uid)}" ${u.ativo ? 'checked' : ''} ${podeEditar ? '' : 'disabled'}> Ativo</label>
         <button class="btn" data-temp="${esc(u.uid)}" type="button" title="${esc(motivo)}" ${podeSenha ? '' : 'disabled'}>🔑 Senha temporária</button>
@@ -406,12 +406,12 @@ async function tabUsuarios(box){
 async function tabAvisos(box){
   let atual = null; try { atual = await B().getAviso(); } catch (e) {}
   const quando = t => new Date(t).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-  box.innerHTML = `<p class="au-sub" style="margin-top:0">O aviso aparece, na hora, no topo da tela de <b>todas as pessoas que entraram com usuário e senha</b>. Se a pessoa estiver em outra aba ou janela, o título da aba pisca com "📢 Aviso da gestão!". Quem abrir o site depois não recebe, e você não vê o seu próprio aviso.</p>
+  box.innerHTML = `<p class="au-sub u05">O aviso aparece, na hora, no topo da tela de <b>todas as pessoas que entraram com usuário e senha</b>. Se a pessoa estiver em outra aba ou janela, o título da aba pisca com "📢 Aviso da gestão!". Quem abrir o site depois não recebe, e você não vê o seu próprio aviso.</p>
     <div class="au-msg" id="mMsg" role="alert"></div>
     <label class="au-f"><span>Aviso</span><textarea id="mTxt" maxlength="500" placeholder="Ex.: O callwe está com instabilidade. Aguardem novas orientações."></textarea></label>
-    <div style="display:flex;gap:10px;align-items:center"><button class="btn" id="mSend" type="button">📢 Enviar para todos</button><span class="au-note" id="mCnt" style="margin:0">0/500</span></div>
-    ${atual ? `<div class="au-cat" style="margin-top:20px">Último aviso enviado · ${esc(quando(atual.enviadoEm))}</div>
-      <div class="au-item"><div class="au-main"><small style="white-space:pre-wrap;max-width:none">${esc(atual.texto)}</small></div>
+    <div class="u24"><button class="btn" id="mSend" type="button">📢 Enviar para todos</button><span class="au-note u03" id="mCnt">0/500</span></div>
+    ${atual ? `<div class="au-cat u25">Último aviso enviado · ${esc(quando(atual.enviadoEm))}</div>
+      <div class="au-item"><div class="au-main"><small class="u26">${esc(atual.texto)}</small></div>
       <div class="au-acts"><button class="btn ghost" id="mAgain" type="button">↻ Usar este texto</button></div></div>` : ''}`;
   const txt = q('#mTxt', box), msg = q('#mMsg', box), cnt = () => q('#mCnt', box).textContent = txt.value.length + '/500';
   txt.oninput = cnt;

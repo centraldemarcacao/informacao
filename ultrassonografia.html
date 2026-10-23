@@ -45,8 +45,8 @@
     <div class="chips" id="chips"></div>
   </div>
 
-  <div class="subbar" style="margin-top:-6px">
-    <p class="result-count" id="count" style="margin:0"></p>
+  <div class="subbar u34">
+    <p class="result-count u03" id="count"></p>
     <button class="btn ghost hidden" id="clear" type="button">✕ Limpar filtros</button>
   </div>
 
@@ -414,7 +414,7 @@ function openProf(name){
     sub: plural(list.length,'procedimento habilitado','procedimentos habilitados'),
     html: groups.map(g => `
       <div style="margin-bottom:18px;${cvars(g.c)}">
-        <div class="sec-head" style="margin:0 0 6px"><span class="cat-tag" style="margin:0">${CAT_META[g.c].ico} ${UI.esc(g.c)}</span><span class="count-pill">${g.items.length}</span></div>
+        <div class="sec-head u35"><span class="cat-tag u03">${CAT_META[g.c].ico} ${UI.esc(g.c)}</span><span class="count-pill">${g.items.length}</span></div>
         <div class="prof-list">${g.items.map(p => `<button class="prof-item" data-i="${p.i}" type="button">${UI.esc(p.procedure)}</button>`).join('')}</div>
       </div>`).join(''),
     foot: '<button class="btn ghost" id="mCopy" type="button">📋 Copiar lista</button><button class="btn" id="mFilter" type="button">Filtrar a página por este profissional</button>'

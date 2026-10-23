@@ -76,3 +76,8 @@ PARA ATIVAR
 1. Publique o firestore.rules de novo (obrigatório: libera anexos ilimitados e os campos especialidade/CRM).
 2. (Não usa Firebase Storage: os anexos ficam no Firestore, plano gratuito.)
 3. Copie triagem.html, triagem.js, painel.html, firestore.rules (publicar), shell.js, index.html e styles.css para o repositório.
+
+CSS
+- TODO o CSS do site está em styles.css (nenhuma página tem mais <style>). Estilos específicos de uma página
+  ficam no final do arquivo, com escopo body[data-page="..."]; classes u01...u35 substituem style="" estáticos.
+- Exceção: CP_CSS em triagem.js (comprovante impresso, vai dentro de um iframe de impressão e precisa ir junto).

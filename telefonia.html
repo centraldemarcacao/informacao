@@ -845,7 +845,7 @@ function render(){
     if(!items.length) return '';
     return `<section class="section">
       <div class="sec-head"><h2>${g.ico} ${g.k}</h2><span class="count-pill">${items.length}</span></div>
-      <div class="phone-grid" style="margin-bottom:0">${items.map(card).join('')}</div>
+      <div class="phone-grid u30">${items.map(card).join('')}</div>
     </section>`;
   }).join('') || '<div class="nothing"><big>🔎</big>Nenhum contato encontrado</div>';
 
@@ -855,9 +855,9 @@ function render(){
     <tbody>${sorted.map(d => `<tr>
       <td class="nm">${UI.esc(d.n)}</td>
       <td>${numBtns(d,true)}</td>
-      <td><span class="unit u-${d.u}" style="position:static;display:inline-block">${d.u}</span></td>
+      <td><span class="unit u-${d.u} u31">${d.u}</span></td>
       <td>${d.o ? UI.esc(d.o) : ''} ${waBtn(d)}</td></tr>`).join('')}</tbody></table>`
-    : '<div class="nothing" style="margin:20px"><big>🔎</big>Nenhum contato encontrado</div>';
+    : '<div class="nothing u08"><big>🔎</big>Nenhum contato encontrado</div>';
 
   $('viewCards').style.display = state.view==='cards' ? '' : 'none';
   $('viewList').style.display  = state.view==='list'  ? '' : 'none';

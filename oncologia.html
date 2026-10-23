@@ -173,7 +173,7 @@ function openDoctor(name){
   UI.openModal({
     title: name,
     sub: 'Atua em ' + plural(DOCS[name].length,'área','áreas'),
-    html: `<div class="pills">${pillsHTML(name)}</div><p style="color:var(--muted);font-size:.82rem;font-weight:600;margin:16px 0 0">Clique em uma área para ver todos os médicos dela.</p>`
+    html: `<div class="pills">${pillsHTML(name)}</div><p class="u07">Clique em uma área para ver todos os médicos dela.</p>`
   });
 }
 
@@ -206,7 +206,7 @@ function buildNetwork(){
   if(net) return;
   const el = $('network');
   if(!window.vis){
-    el.innerHTML = '<div class="nothing" style="margin:20px">Não foi possível carregar o gráfico (biblioteca vis-network). Verifique a conexão com a internet e recarregue a página.</div>';
+    el.innerHTML = '<div class="nothing u08">Não foi possível carregar o gráfico (biblioteca vis-network). Verifique a conexão com a internet e recarregue a página.</div>';
     return;
   }
   const ns = [], es = [];
