@@ -11,10 +11,9 @@
 <style>
 /* Padrão único para todos os cards da semana (SUS, Convênio e Residente):
    linha 1 = nome + relógio | linha 2 = categoria | linha 3 = vagas */
-.week .doc .n{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:5px;flex-wrap:nowrap}
-.week .doc .n .nm{display:flex;align-items:center;gap:6px;max-width:100%}
-.week .doc .n .tag{align-self:flex-start;margin:0;white-space:nowrap}
-.week .doc .v{margin-top:6px}
+.week .doc .n{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;flex-wrap:nowrap}
+.week .doc .n .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.week .doc .n .tag{flex:0 0 auto;margin:0;white-space:nowrap}
 </style>
 </head>
 <body data-page="radioterapia">
@@ -164,7 +163,7 @@ function docHTML(s){
   if(s.n!=null) parts.push(`<b>${s.n}</b> novos`);
   if(s.k!=null) parts.push(`<b>${s.k}</b> controles`);
   return `<button class="doc cat-${s.c}" data-m="${UI.esc(s.m)}">
-    <div class="n"><span class="nm">${UI.esc(s.m)}${clockHTML(s)}</span><span class="tag">${CATS[s.c]}</span></div>
+    <div class="n"><span class="nm">${UI.esc(s.m)}</span><span class="tag">${CATS[s.c]}</span></div>
     <div class="v">${parts.join(' · ') || 'Sem vagas'}</div>
   </button>`;
 }
