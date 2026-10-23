@@ -11,9 +11,10 @@
 <style>
 /* Padrão único para todos os cards da semana (SUS, Convênio e Residente):
    linha 1 = nome + relógio | linha 2 = categoria | linha 3 = vagas */
-.week .doc .n{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;flex-wrap:nowrap}
-.week .doc .n .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.week .doc .n .tag{flex:0 0 auto;margin:0;white-space:nowrap}
+.week .cell .doc .n{display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:4px !important;flex-wrap:nowrap !important}
+.week .cell .doc .n .nm{flex:1 1 auto !important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.week .cell .doc .n .tag{flex:0 0 auto !important;margin:0 !important;white-space:nowrap !important;font-size:9px !important;letter-spacing:0 !important;padding:2px 6px !important}
+.week .cell .doc{padding-left:10px !important;padding-right:8px !important}
 </style>
 </head>
 <body data-page="radioterapia">
