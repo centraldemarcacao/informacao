@@ -1,5 +1,6 @@
 /*!
- * chatbot.js — widget de chat para GitHub Pages (visual alinhado ao site da Central de Marcação).
+ * chatbot.js — VERSÃO 2026-10-30 (balão volta 60 s após o clique)
+ * Widget de chat para GitHub Pages (visual alinhado ao site da Central de Marcação).
  * Uso (antes de </body>):
  *   <link rel="stylesheet" href="chatbot.css">
  *   <script src="chatbot.js" data-endpoint="https://chatbot-liga.SEU-SUBDOMINIO.workers.dev" defer></script>
@@ -19,6 +20,7 @@
   var MAX_HIST = 10;           // mensagens enviadas como contexto
   var MAX_CHARS = 1500;        // mesmo limite do Worker
   var TIMEOUT_MS = 60000;
+  var DICA_VOLTA_MS = 60000;   // quanto tempo depois de clicado o balão "Dúvidas? Pergunte aqui" reaparece (60 s)
   var PAGINAS = ['index', 'oncologia', 'quimioterapia', 'radioterapia', 'ultrassonografia', 'anotacoes', 'telefonia', 'triagem'];
 
   /* ATALHOS da tela inicial. Edite à vontade: ico (emoji), t (título curto), q (pergunta enviada), bg (cor do quadradinho).
@@ -90,7 +92,6 @@
   var dica = el('div', 'lg-dica', 'Dúvidas? Pergunte aqui');
   var fab = el('button', 'lg-fab'); fab.type = 'button'; fab.setAttribute('aria-label', 'Abrir assistente de dúvidas'); fab.setAttribute('aria-expanded', 'false');
   if (AVATAR_NO_BOTAO && AVATAR) comImagem(fab, ICO.chat); else fab.innerHTML = ICO.chat;
-  if (store('lg_dica') || historico.length) dica.style.display = 'none';
   launch.appendChild(dica); launch.appendChild(fab);
 
   var panel = el('div', 'lg-panel'); panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', TITULO);
@@ -157,11 +158,26 @@
     historico.forEach(function (m) { mensagem(m.role, m.content, m.t); });
     rolar();
   }
+  /* Balão "Dúvidas? Pergunte aqui": some quando o chat é aberto e volta DICA_VOLTA_MS depois (60 s).
+     Se o chat ainda estiver aberto nessa hora, o balão volta assim que ele for fechado. */
+  var dicaTimer = null, dicaPronta = false;
+  function mostrarDica() {
+    if (root.classList.contains('open')) { dicaPronta = true; return; }
+    dicaPronta = false; dica.style.display = '';
+    dica.style.animation = 'none'; void dica.offsetWidth; dica.style.animation = '';   // repete a entrada suave
+  }
+  function esconderDicaEAgendar() {
+    dica.style.display = 'none'; dicaPronta = false;
+    clearTimeout(dicaTimer); dicaTimer = setTimeout(mostrarDica, DICA_VOLTA_MS);
+  }
   function abrir() {
-    root.classList.add('open'); fab.setAttribute('aria-expanded', 'true'); store('lg_dica', '1');
+    root.classList.add('open'); fab.setAttribute('aria-expanded', 'true'); esconderDicaEAgendar();
     setTimeout(function () { ta.focus(); rolar(); }, 50);
   }
-  function fechar() { root.classList.remove('open'); fab.setAttribute('aria-expanded', 'false'); fab.focus(); }
+  function fechar() {
+    root.classList.remove('open'); fab.setAttribute('aria-expanded', 'false'); fab.focus();
+    if (dicaPronta) mostrarDica();
+  }
 
   fab.onclick = abrir; dica.onclick = abrir; bFechar.onclick = fechar;
   bNovo.onclick = function () {
