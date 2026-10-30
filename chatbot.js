@@ -14,7 +14,7 @@
   var MAX_CHARS = 1500;        // mesmo limite do Worker
   var TIMEOUT_MS = 60000;
   var PAGINAS = ['index', 'oncologia', 'quimioterapia', 'radioterapia', 'ultrassonografia', 'anotacoes', 'telefonia', 'triagem'];
-  var SUGESTOES = ['Quais médicos atendem Mama?', 'Qual o intervalo de retorno da Capecitabina?', 'Telefone do Pronto-Socorro', 'Como registrar uma triagem?'];
+  var SUGESTOES = ['Quais médicos atendem Mama?', 'Qual o intervalo de retorno da Zoladex?', 'Qual o telefone das secretárias?', 'Como registrar uma triagem?'];
 
   var historico = [];          // [{role, content}]
   var ocupado = false, ctrl = null;
