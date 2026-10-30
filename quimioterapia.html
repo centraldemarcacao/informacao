@@ -36,11 +36,6 @@
     <div class="chips" id="catChips"></div>
   </div>
 
-  <div class="subbar">
-    <span class="chips-label">Observação</span>
-    <div class="chips" id="flagChips"></div>
-  </div>
-
   <div class="qbar">
     <p class="result-count" id="resultado" role="status" aria-live="polite"></p>
     <button type="button" class="btn ghost" id="limpar" hidden>✕ Limpar filtros</button>
@@ -245,15 +240,14 @@ CATS.forEach(c => (quimioData[c.key] || []).forEach(it => {
     dias: diasPermitidos(o), opcoes: opcoesIntervalo(it.intervalo) });
 }));
 
-const state = { cat:'all', flags:new Set(), q:'' };
+const state = { cat:'all', q:'' };
 const calc  = {};   /* id do protocolo -> { open, date } (sobrevive aos filtros) */
 
-function filtrando(){ return !!(state.q.trim() || state.cat !== 'all' || state.flags.size); }
+function filtrando(){ return !!(state.q.trim() || state.cat !== 'all'); }
 
 function matches(it){
   const q = UI.norm(state.q.trim());
   return (state.cat==='all' || it.cat.key===state.cat) &&
-         [...state.flags].every(k => it.flags.includes(k)) &&
          (!q || UI.norm(it.nome + ' ' + it.intervalo + ' ' + (it.obs||'')).includes(q));
 }
 
@@ -295,16 +289,12 @@ function renderChips(){
   $('catChips').innerHTML =
     `<button type="button" class="chip ${state.cat==='all'?'active':''}" data-c="all" aria-pressed="${state.cat==='all'}">Todos <em>${ITEMS.length}</em></button>` +
     CATS.map(c => `<button type="button" class="chip ${state.cat===c.key?'active':''}" data-c="${UI.esc(c.key)}" aria-pressed="${state.cat===c.key}"><span aria-hidden="true">${c.ico}</span> ${c.short} <em>${ITEMS.filter(i=>i.cat===c).length}</em></button>`).join('');
-  $('flagChips').innerHTML =
-    `<button type="button" class="chip ${!state.flags.size?'active':''}" data-fl="all" aria-pressed="${!state.flags.size}">Todas</button>` +
-    FLAGS.map(f => `<button type="button" class="chip ${state.flags.has(f.k)?'active':''}" data-fl="${f.k}" aria-pressed="${state.flags.has(f.k)}">${f.label} <em>${ITEMS.filter(i=>i.flags.includes(f.k)).length}</em></button>`).join('');
 }
 
 function salvarURL(){
   const p = new URLSearchParams();
   if(state.q.trim()) p.set('q', state.q.trim());
   if(state.cat !== 'all') p.set('cat', CATS.find(c => c.key === state.cat).slug);
-  if(state.flags.size) p.set('obs', [...state.flags].join(','));
   const s = p.toString();
   try{ history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); }catch(e){}
 }
@@ -314,12 +304,11 @@ function lerURL(){
   state.q = p.get('q') || '';
   const c = CATS.find(c => c.slug === p.get('cat'));
   state.cat = c ? c.key : 'all';
-  (p.get('obs') || '').split(',').forEach(k => { if(FLAGS.some(f => f.k === k)) state.flags.add(k); });
   $('busca').value = state.q;
 }
 
 function limpar(){
-  state.q = ''; state.cat = 'all'; state.flags.clear();
+  state.q = ''; state.cat = 'all';
   $('busca').value = '';
   renderChips(); render();
 }
@@ -373,14 +362,6 @@ $('busca').addEventListener('input', UI.debounce(e => { state.q = e.target.value
 $('catChips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if(!b) return;
   state.cat = b.dataset.c; renderChips(); render();
-});
-$('flagChips').addEventListener('click', e => {
-  const b = e.target.closest('.chip'); if(!b) return;
-  const k = b.dataset.fl;
-  if(k === 'all') state.flags.clear();
-  else if(state.flags.has(k)) state.flags.delete(k);
-  else state.flags.add(k);
-  renderChips(); render();
 });
 $('limpar').addEventListener('click', limpar);
 $('copiarLink').addEventListener('click', () => UI.copy(location.href, 'Link copiado!'));
