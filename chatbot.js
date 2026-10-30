@@ -61,7 +61,7 @@
   var ta = el('textarea'); ta.rows = 1; ta.maxLength = MAX_CHARS; ta.placeholder = 'Digite sua dúvida…'; ta.setAttribute('aria-label', 'Sua pergunta');
   var send = el('button', 'lg-send', '➤'); send.type = 'submit'; send.setAttribute('aria-label', 'Enviar');
   form.appendChild(ta); form.appendChild(send);
-  var foot = el('div', 'lg-foot', 'IA pode errar. Não substitui orientação médica nem a confirmação com a equipe. Não envie CPF ou dados de exames.');
+  var foot = el('div', 'lg-foot', 'IA pode errar. Não substitui orientação médica nem a confirmação com a equipe. Não enviar CPF ou dados de exames.');
 
   panel.appendChild(head); panel.appendChild(msgs); panel.appendChild(form); panel.appendChild(foot);
   root.appendChild(fab); root.appendChild(panel); document.body.appendChild(root);
