@@ -15,9 +15,10 @@
 <section class="hero">
   <div class="hero-inner">
     <div>
-      <span class="eyebrow"><span aria-hidden="true">💉</span> Quimioterapia</span>
-      <h1>Medicações</h1>
+      <span class="eyebrow"><span aria-hidden="true">💉</span> Quimioterapia · <span id="eyeTipo">SUS</span></span>
+      <h1 id="titulo">Medicações SUS</h1>
       <p>Consulte o intervalo de retorno de cada medicação e as observações para o agendamento.</p>
+      <div class="tipo-sw" id="tipoSw" role="group" aria-label="Tipo de atendimento"></div>
     </div>
   </div>
 </section>
@@ -52,121 +53,123 @@
 <script src="shell.js"></script>
 <script>
 /* ============ DADOS ============
-   nome | intervalo (retorno) | obs (observação de agendamento, opcional)
+   nome | intervalo (retorno) | obs (observação de agendamento, opcional) | tipo (opcional)
+   tipo: "sus" ou "convenio" (ou ["sus","convenio"] se vale para os dois). Sem "tipo", o protocolo entra no SUS.
+   Para incluir um protocolo de convênio, acrescente uma linha com tipo: "convenio" na categoria certa.
    Para incluir um protocolo, acrescente uma linha na categoria certa.   */
 const quimioData = {
     "Quimioterápicos Orais": [
-        { nome: "ABIRATERONA", intervalo: "30 ou 60 dias", obs: "Conforme evolução médica" },
-        { nome: "CAPECITABINA (XELODA)", intervalo: "21 dias", obs: "" },
-        { nome: "CICLOFOSFAMIDA", intervalo: "30 dias", obs: "" },
-        { nome: "CLORAMBUCILA", intervalo: "30 dias", obs: "" },
-        { nome: "DASATINIBE (SPRYCEL)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica" },
-        { nome: "ETOPOSIDE D1 - D14", intervalo: "21 dias", obs: "" },
-        { nome: "ETOPOSIDE D1 - D21", intervalo: "30 dias", obs: "" },
-        { nome: "GEFITINIBE (IRESSA)", intervalo: "30 ou 60 dias", obs: "Conforme evolução médica" },
-        { nome: "HIDROXIUREIA (HYDREA)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica" },
-        { nome: "IMATINIBE (GLIVEC)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica" },
-        { nome: "MELFALANO", intervalo: "30 dias", obs: "" },
-        { nome: "MERCAPTOPURINA + TRETINOÍNA (ATRA) + MTX", intervalo: "90 dias", obs: "Conforme evolução médica" },
-        { nome: "NILOTINIBE (TASIGNA)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica" },
-        { nome: "PALBOCICLIBE (IBRANCE)", intervalo: "30 dias", obs: "" },
-        { nome: "SUNITINIBE (SUTENT)", intervalo: "21 ou 42 dias", obs: "Conforme evolução médica" },
-        { nome: "TEMOZOLAMIDA (TEMODAL) - CONCOMITANTE RT", intervalo: "15, 30, 45 ou 60 dias", obs: "Conforme evolução médica" },
-        { nome: "TEMOZOLAMIDA (TEMODAL) - MANUTENÇÃO D1-D5", intervalo: "28 dias", obs: "" },
-        { nome: "VINORELBINA (NAVELBINE)", intervalo: "15, 21 ou 28 dias", obs: "Conforme evolução médica" }
+        { nome: "ABIRATERONA", intervalo: "30 ou 60 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "CAPECITABINA (XELODA)", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "CICLOFOSFAMIDA", intervalo: "30 dias", obs: "", tipo: "sus" },
+        { nome: "CLORAMBUCILA", intervalo: "30 dias", obs: "", tipo: "sus" },
+        { nome: "DASATINIBE (SPRYCEL)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "ETOPOSIDE D1 - D14", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "ETOPOSIDE D1 - D21", intervalo: "30 dias", obs: "", tipo: "sus" },
+        { nome: "GEFITINIBE (IRESSA)", intervalo: "30 ou 60 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "HIDROXIUREIA (HYDREA)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "IMATINIBE (GLIVEC)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "MELFALANO", intervalo: "30 dias", obs: "", tipo: "sus" },
+        { nome: "MERCAPTOPURINA + TRETINOÍNA (ATRA) + MTX", intervalo: "90 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "NILOTINIBE (TASIGNA)", intervalo: "30, 60 ou 90 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "PALBOCICLIBE (IBRANCE)", intervalo: "30 dias", obs: "", tipo: "sus" },
+        { nome: "SUNITINIBE (SUTENT)", intervalo: "21 ou 42 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "TEMOZOLAMIDA (TEMODAL) - CONCOMITANTE RT", intervalo: "15, 30, 45 ou 60 dias", obs: "Conforme evolução médica", tipo: "sus" },
+        { nome: "TEMOZOLAMIDA (TEMODAL) - MANUTENÇÃO D1-D5", intervalo: "28 dias", obs: "", tipo: "sus" },
+        { nome: "VINORELBINA (NAVELBINE)", intervalo: "15, 21 ou 28 dias", obs: "Conforme evolução médica", tipo: "sus" }
     ],
     "Quimioterápicos Injetáveis": [
-        { nome: "AC", intervalo: "21 dias", obs: "" },
-        { nome: "AC DOSE DENSA", intervalo: "15 dias", obs: "" },
-        { nome: "AC ZOLEDRONICO (ZOMETA)", intervalo: "30 dias", obs: "SUS só cobre 1 ao mês" },
-        { nome: "AZACITIDINA (VIDAZA)", intervalo: "D1-D7 a cada 28 dias", obs: "Via Subcutânea (SC)" },
-        { nome: "BEP", intervalo: "D1-D5, D8 e D15", obs: "" },
-        { nome: "BRENTUXIMABE (ADCETRIZ)", intervalo: "21 dias", obs: "Judicializado (checar farmácia)" },
-        { nome: "CARBOPLATINA ISOLADA", intervalo: "21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "CARBO + ETOPOSÍDEO", intervalo: "D1-D3 a cada 21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "CARBO + GENCITABINA", intervalo: "D1 e D8 a cada 21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "CARBO + PACLITAXEL 175", intervalo: "21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "CARBO + PACLITAXEL SEMANAL", intervalo: "Semanal", obs: "Poltronas 05 a 34" },
-        { nome: "CARBO + PEMETREXEDE", intervalo: "21 dias", obs: "Agendar apenas Terças ou Quartas" },
-        { nome: "CICLOFOSFAMIDA", intervalo: "21 dias", obs: "" },
-        { nome: "CISPLATINA 100", intervalo: "21 dias", obs: "" },
-        { nome: "CISPLATINA SEMANAL", intervalo: "Semanal (6 semanas)", obs: "" },
-        { nome: "CISPLATINA + DOCETAXEL", intervalo: "D1 e D8 a cada 21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "CISPLATINA + DOXORRUBICINA", intervalo: "D1-D3 a cada 21 dias", obs: "" },
-        { nome: "CISPLATINA + ETOPOSIDEO", intervalo: "D1 e D8 a cada 21 dias", obs: "" },
-        { nome: "CISPLATINA + GENCITABINA", intervalo: "D1 e D8 a cada 21 dias", obs: "" },
-        { nome: "CISPLATINA + VINORELBINA", intervalo: "D1 e D8 a cada 21 dias", obs: "" },
-        { nome: "CMF", intervalo: "21 ou 28 dias", obs: "Checar evolução" },
-        { nome: "DACARBAZINA", intervalo: "21 dias", obs: "" },
-        { nome: "DESSENSIBILIZAÇÃO", intervalo: "Depende do protocolo", obs: "8h de infusão - Agendar em LEITO - Poltronas 05 a 34" },
-        { nome: "DOCETAXEL 50 DENSA", intervalo: "15 ou 21 dias", obs: "Poltronas 05 a 34 (Checar evolução)" },
-        { nome: "DOCETAXEL 75", intervalo: "21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "DOCETAXEL + PREDNISONA", intervalo: "21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "DOXORRUBICINA", intervalo: "28 dias", obs: "" },
-        { nome: "DOXORRUBICINA + IFOSFAMIDA + MESNA", intervalo: "D1-D5 cada 21 dias", obs: "" },
-        { nome: "DOXORRUBICINA LIPOSSOMAL", intervalo: "28 dias", obs: "Via SC" },
-        { nome: "ELIGARD 7,5", intervalo: "30 dias", obs: "Via SC" },
-        { nome: "ELIGARD 22,5", intervalo: "90 dias", obs: "Via SC" },
-        { nome: "EMA-CO", intervalo: "D1, D2 e D8, pausa 1 semana", obs: "Poltronas 05 a 34" },
-        { nome: "ERITROPOETINA (EPREX)", intervalo: "30 dias", obs: "Via SC" },
-        { nome: "ETOPOSIDEO ISOLADO", intervalo: "21 dias", obs: "" },
-        { nome: "ETOPOSIDEO (D1, D2 e D3)", intervalo: "21 dias", obs: "" },
-        { nome: "FAC", intervalo: "21 dias", obs: "" },
-        { nome: "FLOT", intervalo: "15 dias", obs: "Poltronas 05 a 19" },
-        { nome: "FLOX", intervalo: "6 semanas seguidas com pausa de 2 semanas", obs: "Poltronas 05 a 19" },
-        { nome: "FOLFIRI", intervalo: "15 dias", obs: "" },
-        { nome: "FOLFOX", intervalo: "15 dias", obs: "Poltronas 05 a 19" },
-        { nome: "FOLFIRINOX", intervalo: "15 dias", obs: "Poltronas 05 a 19" },
-        { nome: "5-FU + LEUCOVORIN", intervalo: "5 dias a cada 21 ou 28 dias", obs: "Checar evolução" },
-        { nome: "GENCITABINA ISOLADA", intervalo: "21 dias", obs: "" },
-        { nome: "GENCITABINA INTRAVESICAL", intervalo: "28 dias (1 ao mês)", obs: "Agendar em LEITO" },
-        { nome: "IFOSFAMIDA", intervalo: "21 dias", obs: "" },
-        { nome: "LANREOTIDA", intervalo: "28 dias (1 ao mês)", obs: "Via SC" },
-        { nome: "MAYO CLINIC", intervalo: "D1-D5 cada 28 dias", obs: "" },
-        { nome: "METOTREXATO IV", intervalo: "21 dias", obs: "" },
-        { nome: "METOTREXATO IM", intervalo: "Checar prescrição", obs: "Via IM" },
-        { nome: "MITOXANTRONA + PREDNISONA", intervalo: "28 dias (1 ao mês)", obs: "" },
-        { nome: "NIVOLUMABE", intervalo: "21 dias", obs: "" },
-        { nome: "ONCO BCG INDUÇÃO", intervalo: "Semanal (6 semanas seguidas)", obs: "Agendar em LEITO, às 8h ou 14h - Prioridade" },
-        { nome: "ONCO BCG MANUTENÇÃO", intervalo: "30 dias", obs: "Agendar em LEITO, às 8h ou 14h" },
-        { nome: "OXALIPLATINA (XELOX)", intervalo: "21 dias", obs: "Poltronas 05 a 19" },
-        { nome: "PACLITAXEL 175", intervalo: "21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "PEMETREXEDE (ALIMTA)", intervalo: "21 dias", obs: "Agendar apenas Terças ou Quartas" },
-        { nome: "ROSWELL PARK", intervalo: "6 semanas seguidas com pausa de 2 semanas", obs: "" },
-        { nome: "TC", intervalo: "21 dias", obs: "Poltronas 05 a 34" },
-        { nome: "TCH", intervalo: "21 dias", obs: "Confirmar Trastuzumabe UNICAT / Poltronas 05 a 34" },
-        { nome: "TH", intervalo: "21 dias", obs: "Confirmar Trastuzumabe UNICAT / Poltronas 05 a 34" },
-        { nome: "TH SEMANAL", intervalo: "Semanal", obs: "Confirmar Trastuzumabe UNICAT / Poltronas 05 a 34" },
-        { nome: "TIP", intervalo: "D1-D3 cada 21 dias", obs: "D1: 8h de infusão / Poltronas 05 a 34" },
-        { nome: "TOPOTECANO", intervalo: "21 ou 28 dias", obs: "Checar evolução" },
-        { nome: "TRASTUZUMABE", intervalo: "21 dias", obs: "Confirmar na lista UNICAT" },
-        { nome: "TRASTUZUMABE-ENTANSINA (KADCYLA)", intervalo: "21 dias", obs: "Judicializado (checar farmácia) - Agendar apenas Quintas ou Sextas" },
-        { nome: "TRASTUZUMABE-DERUXTECANO (ENHERTU)", intervalo: "21 dias", obs: "Judicializado (checar farmácia) - Agendar apenas Sextas-feiras" },
-        { nome: "TRASTUZUMABE + PERTUZUMABE", intervalo: "21 dias", obs: "Confirmar lista UNICAT" },
-        { nome: "VAC", intervalo: "21 ou 28 dias", obs: "Checar evolução" },
-        { nome: "VINORELBINA", intervalo: "D1 e D8 a cada 21 dias", obs: "" },
-        { nome: "XELIRI", intervalo: "21 dias", obs: "" },
-        { nome: "ZOLADEX 3,6", intervalo: "30 dias", obs: "Via SC" },
-        { nome: "ZOLADEX 10,8", intervalo: "90 dias", obs: "Via SC" }
+        { nome: "AC", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "AC DOSE DENSA", intervalo: "15 dias", obs: "", tipo: "sus" },
+        { nome: "AC ZOLEDRONICO (ZOMETA)", intervalo: "30 dias", obs: "SUS só cobre 1 ao mês", tipo: "sus" },
+        { nome: "AZACITIDINA (VIDAZA)", intervalo: "D1-D7 a cada 28 dias", obs: "Via Subcutânea (SC)", tipo: "sus" },
+        { nome: "BEP", intervalo: "D1-D5, D8 e D15", obs: "", tipo: "sus" },
+        { nome: "BRENTUXIMABE (ADCETRIZ)", intervalo: "21 dias", obs: "Judicializado (checar farmácia)", tipo: "sus" },
+        { nome: "CARBOPLATINA ISOLADA", intervalo: "21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "CARBO + ETOPOSÍDEO", intervalo: "D1-D3 a cada 21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "CARBO + GENCITABINA", intervalo: "D1 e D8 a cada 21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "CARBO + PACLITAXEL 175", intervalo: "21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "CARBO + PACLITAXEL SEMANAL", intervalo: "Semanal", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "CARBO + PEMETREXEDE", intervalo: "21 dias", obs: "Agendar apenas Terças ou Quartas", tipo: "sus" },
+        { nome: "CICLOFOSFAMIDA", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "CISPLATINA 100", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "CISPLATINA SEMANAL", intervalo: "Semanal (6 semanas)", obs: "", tipo: "sus" },
+        { nome: "CISPLATINA + DOCETAXEL", intervalo: "D1 e D8 a cada 21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "CISPLATINA + DOXORRUBICINA", intervalo: "D1-D3 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "CISPLATINA + ETOPOSIDEO", intervalo: "D1 e D8 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "CISPLATINA + GENCITABINA", intervalo: "D1 e D8 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "CISPLATINA + VINORELBINA", intervalo: "D1 e D8 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "CMF", intervalo: "21 ou 28 dias", obs: "Checar evolução", tipo: "sus" },
+        { nome: "DACARBAZINA", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "DESSENSIBILIZAÇÃO", intervalo: "Depende do protocolo", obs: "8h de infusão - Agendar em LEITO - Poltronas 05 a 34", tipo: "sus" },
+        { nome: "DOCETAXEL 50 DENSA", intervalo: "15 ou 21 dias", obs: "Poltronas 05 a 34 (Checar evolução)", tipo: "sus" },
+        { nome: "DOCETAXEL 75", intervalo: "21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "DOCETAXEL + PREDNISONA", intervalo: "21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "DOXORRUBICINA", intervalo: "28 dias", obs: "", tipo: "sus" },
+        { nome: "DOXORRUBICINA + IFOSFAMIDA + MESNA", intervalo: "D1-D5 cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "DOXORRUBICINA LIPOSSOMAL", intervalo: "28 dias", obs: "Via SC", tipo: "sus" },
+        { nome: "ELIGARD 7,5", intervalo: "30 dias", obs: "Via SC", tipo: "sus" },
+        { nome: "ELIGARD 22,5", intervalo: "90 dias", obs: "Via SC", tipo: "sus" },
+        { nome: "EMA-CO", intervalo: "D1, D2 e D8, pausa 1 semana", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "ERITROPOETINA (EPREX)", intervalo: "30 dias", obs: "Via SC", tipo: "sus" },
+        { nome: "ETOPOSIDEO ISOLADO", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "ETOPOSIDEO (D1, D2 e D3)", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "FAC", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "FLOT", intervalo: "15 dias", obs: "Poltronas 05 a 19", tipo: "sus" },
+        { nome: "FLOX", intervalo: "6 semanas seguidas com pausa de 2 semanas", obs: "Poltronas 05 a 19", tipo: "sus" },
+        { nome: "FOLFIRI", intervalo: "15 dias", obs: "", tipo: "sus" },
+        { nome: "FOLFOX", intervalo: "15 dias", obs: "Poltronas 05 a 19", tipo: "sus" },
+        { nome: "FOLFIRINOX", intervalo: "15 dias", obs: "Poltronas 05 a 19", tipo: "sus" },
+        { nome: "5-FU + LEUCOVORIN", intervalo: "5 dias a cada 21 ou 28 dias", obs: "Checar evolução", tipo: "sus" },
+        { nome: "GENCITABINA ISOLADA", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "GENCITABINA INTRAVESICAL", intervalo: "28 dias (1 ao mês)", obs: "Agendar em LEITO", tipo: "sus" },
+        { nome: "IFOSFAMIDA", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "LANREOTIDA", intervalo: "28 dias (1 ao mês)", obs: "Via SC", tipo: "sus" },
+        { nome: "MAYO CLINIC", intervalo: "D1-D5 cada 28 dias", obs: "", tipo: "sus" },
+        { nome: "METOTREXATO IV", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "METOTREXATO IM", intervalo: "Checar prescrição", obs: "Via IM", tipo: "sus" },
+        { nome: "MITOXANTRONA + PREDNISONA", intervalo: "28 dias (1 ao mês)", obs: "", tipo: "sus" },
+        { nome: "NIVOLUMABE", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "ONCO BCG INDUÇÃO", intervalo: "Semanal (6 semanas seguidas)", obs: "Agendar em LEITO, às 8h ou 14h - Prioridade", tipo: "sus" },
+        { nome: "ONCO BCG MANUTENÇÃO", intervalo: "30 dias", obs: "Agendar em LEITO, às 8h ou 14h", tipo: "sus" },
+        { nome: "OXALIPLATINA (XELOX)", intervalo: "21 dias", obs: "Poltronas 05 a 19", tipo: "sus" },
+        { nome: "PACLITAXEL 175", intervalo: "21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "PEMETREXEDE (ALIMTA)", intervalo: "21 dias", obs: "Agendar apenas Terças ou Quartas", tipo: "sus" },
+        { nome: "ROSWELL PARK", intervalo: "6 semanas seguidas com pausa de 2 semanas", obs: "", tipo: "sus" },
+        { nome: "TC", intervalo: "21 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "TCH", intervalo: "21 dias", obs: "Confirmar Trastuzumabe UNICAT / Poltronas 05 a 34", tipo: "sus" },
+        { nome: "TH", intervalo: "21 dias", obs: "Confirmar Trastuzumabe UNICAT / Poltronas 05 a 34", tipo: "sus" },
+        { nome: "TH SEMANAL", intervalo: "Semanal", obs: "Confirmar Trastuzumabe UNICAT / Poltronas 05 a 34", tipo: "sus" },
+        { nome: "TIP", intervalo: "D1-D3 cada 21 dias", obs: "D1: 8h de infusão / Poltronas 05 a 34", tipo: "sus" },
+        { nome: "TOPOTECANO", intervalo: "21 ou 28 dias", obs: "Checar evolução", tipo: "sus" },
+        { nome: "TRASTUZUMABE", intervalo: "21 dias", obs: "Confirmar na lista UNICAT", tipo: "sus" },
+        { nome: "TRASTUZUMABE-ENTANSINA (KADCYLA)", intervalo: "21 dias", obs: "Judicializado (checar farmácia) - Agendar apenas Quintas ou Sextas", tipo: "sus" },
+        { nome: "TRASTUZUMABE-DERUXTECANO (ENHERTU)", intervalo: "21 dias", obs: "Judicializado (checar farmácia) - Agendar apenas Sextas-feiras", tipo: "sus" },
+        { nome: "TRASTUZUMABE + PERTUZUMABE", intervalo: "21 dias", obs: "Confirmar lista UNICAT", tipo: "sus" },
+        { nome: "VAC", intervalo: "21 ou 28 dias", obs: "Checar evolução", tipo: "sus" },
+        { nome: "VINORELBINA", intervalo: "D1 e D8 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "XELIRI", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "ZOLADEX 3,6", intervalo: "30 dias", obs: "Via SC", tipo: "sus" },
+        { nome: "ZOLADEX 10,8", intervalo: "90 dias", obs: "Via SC", tipo: "sus" }
     ],
     "Quimioterápicos da Hematologia": [
-        { nome: "ABVD - Hemato", intervalo: "15 dias", obs: "" },
-        { nome: "BORTEZOMIBE - Hemato", intervalo: "D1, D8, D15, D22", obs: "Pausa 1 semana - Via SC" },
-        { nome: "CHOEP - Hemato", intervalo: "D1-D3 cada 21 dias", obs: "" },
-        { nome: "CHOP - Hemato", intervalo: "21 dias", obs: "" },
-        { nome: "R-CHOP - Hemato", intervalo: "21 dias", obs: "Confirmar Rituximabe na UNICAT" },
-        { nome: "DARATUMUMABE - Hemato", intervalo: "21 dias", obs: "Judicializado (checar farmácia)" },
-        { nome: "DARATUMUMABE SUBCUTÂNEA - Hemato", intervalo: "Checar prescrição", obs: "Judicializado (checar farmácia) - Via SC" },
-        { nome: "DHAP", intervalo: "D1 (qualquer), D2 (13h), D3 (7h)", obs: "" },
-        { nome: "GDP (CISPLATINA + GENCITABINA) - Hemato", intervalo: "D1 e D8 a cada 21 dias", obs: "" },
-        { nome: "GEMOX - Hemato", intervalo: "D1 e D8 a cada 21 dias", obs: "" },
-        { nome: "R-GEMOX - Hemato", intervalo: "15 dias", obs: "Poltronas 05 a 34" },
-        { nome: "ICE", intervalo: "D1-D3 a cada 21 dias", obs: "" },
-        { nome: "PAMIDRONATO - Hemato", intervalo: "28 dias", obs: "" },
-        { nome: "RITUXIMABE", intervalo: "21 dias", obs: "Confirmar na lista UNICAT" },
-        { nome: "R-mini-CHOP - Hemato", intervalo: "21 dias", obs: "" },
-        { nome: "VCD - Hemato", intervalo: "D1, D8, D15, D22", obs: "Pausa 1 semana - SC/IV (checar evolução)" },
-        { nome: "VTD - Hemato", intervalo: "D1, D8, D15, D22", obs: "Pausa 1 semana - Via SC" }
+        { nome: "ABVD - Hemato", intervalo: "15 dias", obs: "", tipo: "sus" },
+        { nome: "BORTEZOMIBE - Hemato", intervalo: "D1, D8, D15, D22", obs: "Pausa 1 semana - Via SC", tipo: "sus" },
+        { nome: "CHOEP - Hemato", intervalo: "D1-D3 cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "CHOP - Hemato", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "R-CHOP - Hemato", intervalo: "21 dias", obs: "Confirmar Rituximabe na UNICAT", tipo: "sus" },
+        { nome: "DARATUMUMABE - Hemato", intervalo: "21 dias", obs: "Judicializado (checar farmácia)", tipo: "sus" },
+        { nome: "DARATUMUMABE SUBCUTÂNEA - Hemato", intervalo: "Checar prescrição", obs: "Judicializado (checar farmácia) - Via SC", tipo: "sus" },
+        { nome: "DHAP", intervalo: "D1 (qualquer), D2 (13h), D3 (7h)", obs: "", tipo: "sus" },
+        { nome: "GDP (CISPLATINA + GENCITABINA) - Hemato", intervalo: "D1 e D8 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "GEMOX - Hemato", intervalo: "D1 e D8 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "R-GEMOX - Hemato", intervalo: "15 dias", obs: "Poltronas 05 a 34", tipo: "sus" },
+        { nome: "ICE", intervalo: "D1-D3 a cada 21 dias", obs: "", tipo: "sus" },
+        { nome: "PAMIDRONATO - Hemato", intervalo: "28 dias", obs: "", tipo: "sus" },
+        { nome: "RITUXIMABE", intervalo: "21 dias", obs: "Confirmar na lista UNICAT", tipo: "sus" },
+        { nome: "R-mini-CHOP - Hemato", intervalo: "21 dias", obs: "", tipo: "sus" },
+        { nome: "VCD - Hemato", intervalo: "D1, D8, D15, D22", obs: "Pausa 1 semana - SC/IV (checar evolução)", tipo: "sus" },
+        { nome: "VTD - Hemato", intervalo: "D1, D8, D15, D22", obs: "Pausa 1 semana - Via SC", tipo: "sus" }
     ]
 };
 
@@ -240,14 +243,17 @@ CATS.forEach(c => (quimioData[c.key] || []).forEach(it => {
     dias: diasPermitidos(o), opcoes: opcoesIntervalo(it.intervalo) });
 }));
 
-const state = { cat:'all', q:'' };
+const TIPOS = { sus:{ nome:'SUS', ico:'🏥' }, convenio:{ nome:'Convênio', ico:'💳' } };
+const state = { tipo:'sus', cat:'all', q:'' };
+const tipoDe = it => [].concat(it.tipo || 'sus');
+const doTipo = it => tipoDe(it).includes(state.tipo);
 const calc  = {};   /* id do protocolo -> { date } (a última data digitada fica guardada) */
 
 function filtrando(){ return !!(state.q.trim() || state.cat !== 'all'); }
 
 function matches(it){
   const q = UI.norm(state.q.trim());
-  return (state.cat==='all' || it.cat.key===state.cat) &&
+  return doTipo(it) && (state.cat==='all' || it.cat.key===state.cat) &&
          (!q || UI.norm(it.nome + ' ' + it.intervalo + ' ' + (it.obs||'')).includes(q));
 }
 
@@ -285,15 +291,25 @@ function resultadoCalc(it, valor){
 }
 
 /* ---------- filtros, contadores e URL ---------- */
+function renderTipo(){
+  $('tipoSw').innerHTML = Object.keys(TIPOS).map(k =>
+    `<button type="button" class="${state.tipo===k?'on':''}" data-t="${k}" aria-pressed="${state.tipo===k}"><span aria-hidden="true">${TIPOS[k].ico}</span> ${TIPOS[k].nome} <em>${ITEMS.filter(i => tipoDe(i).includes(k)).length}</em></button>`).join('');
+  const n = TIPOS[state.tipo].nome;
+  $('titulo').textContent = 'Medicações ' + n;
+  $('eyeTipo').textContent = n;
+  document.title = 'Quimioterapia ' + n + ' • Central de Marcação';
+}
+
 function renderChips(){
   $('catChips').innerHTML =
-    `<button type="button" class="chip ${state.cat==='all'?'active':''}" data-c="all" aria-pressed="${state.cat==='all'}">Todos <em>${ITEMS.length}</em></button>` +
-    CATS.map(c => `<button type="button" class="chip ${state.cat===c.key?'active':''}" data-c="${UI.esc(c.key)}" aria-pressed="${state.cat===c.key}"><span aria-hidden="true">${c.ico}</span> ${c.short} <em>${ITEMS.filter(i=>i.cat===c).length}</em></button>`).join('');
+    `<button type="button" class="chip ${state.cat==='all'?'active':''}" data-c="all" aria-pressed="${state.cat==='all'}">Todos <em>${ITEMS.filter(doTipo).length}</em></button>` +
+    CATS.map(c => `<button type="button" class="chip ${state.cat===c.key?'active':''}" data-c="${UI.esc(c.key)}" aria-pressed="${state.cat===c.key}"><span aria-hidden="true">${c.ico}</span> ${c.short} <em>${ITEMS.filter(i=>doTipo(i)&&i.cat===c).length}</em></button>`).join('');
 }
 
 function salvarURL(){
   const p = new URLSearchParams();
   if(state.q.trim()) p.set('q', state.q.trim());
+  if(state.tipo !== 'sus') p.set('tipo', state.tipo);
   if(state.cat !== 'all') p.set('cat', CATS.find(c => c.key === state.cat).slug);
   const s = p.toString();
   try{ history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); }catch(e){}
@@ -302,6 +318,7 @@ function salvarURL(){
 function lerURL(){
   const p = new URLSearchParams(location.search);
   state.q = p.get('q') || '';
+  state.tipo = TIPOS[p.get('tipo')] ? p.get('tipo') : 'sus';
   const c = CATS.find(c => c.slug === p.get('cat'));
   state.cat = c ? c.key : 'all';
   $('busca').value = state.q;
@@ -344,7 +361,7 @@ function render(){
   $('kSus').textContent  = list.filter(i=>i.cat===CATS[1]).length;
   $('kHem').textContent  = list.filter(i=>i.cat===CATS[2]).length;
 
-  $('resultado').textContent = `Exibindo ${list.length} de ${ITEMS.length} protocolos`;
+  $('resultado').textContent = `Exibindo ${list.length} de ${ITEMS.filter(doTipo).length} protocolos`;
   $('limpar').hidden = !filtrando();
 
   const html = CATS.map(c => {
@@ -355,7 +372,10 @@ function render(){
       <div class="proto-grid">${items.map(card).join('')}</div>
     </section>`;
   }).join('');
-  $('lista').innerHTML = html || '<div class="nothing"><big aria-hidden="true">🔎</big>Nenhum protocolo encontrado<br><button type="button" class="btn" data-act="limpar">Limpar filtros</button></div>';
+  const semDados = !ITEMS.some(doTipo);
+  $('lista').innerHTML = html || (semDados
+    ? `<div class="nothing"><big aria-hidden="true">${TIPOS[state.tipo].ico}</big>Nenhum protocolo de ${TIPOS[state.tipo].nome} cadastrado ainda.</div>`
+    : '<div class="nothing"><big aria-hidden="true">🔎</big>Nenhum protocolo encontrado<br><button type="button" class="btn" data-act="limpar">Limpar filtros</button></div>');
   salvarURL();
 }
 
@@ -364,6 +384,10 @@ $('busca').addEventListener('input', UI.debounce(e => { state.q = e.target.value
 $('catChips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if(!b) return;
   state.cat = b.dataset.c; renderChips(); render();
+});
+$('tipoSw').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]'); if(!b || b.dataset.t === state.tipo) return;
+  state.tipo = b.dataset.t; renderTipo(); renderChips(); render();
 });
 $('limpar').addEventListener('click', limpar);
 $('copiarLink').addEventListener('click', () => UI.copy(location.href, 'Link copiado!'));
@@ -406,6 +430,7 @@ $('lista').addEventListener('click', e => {
 document.addEventListener('click', e => { if(!e.target.closest('.obs')) document.querySelectorAll('.obs.open').forEach(o => o.classList.remove('open')); });
 
 lerURL();
+renderTipo();
 renderChips();
 render();
 </script>
