@@ -266,21 +266,21 @@ function vizinho(d, dias, passo){
 }
 
 function resultadoCalc(it, valor){
-  if(!it.opcoes)
-    return `<div class="calc-res info">Este protocolo não tem intervalo fixo (“${UI.esc(it.intervalo)}”). Confira a data na prescrição ou na evolução médica.</div>`;
+  if(!it.opcoes) return '<span class="calc-hint">Sem cálculo automático · conferir prescrição</span>';
   const base = parseData(valor);
-  if(!base) return `<div class="calc-res info">Informe a data da última aplicação para ver o retorno.</div>`;
+  if(!base) return '<span class="calc-hint">← informe a última aplicação</span>';
   const rot = rotuloRetorno(it.intervalo);
   return it.opcoes.map(n => {
     const d = new Date(base); d.setDate(d.getDate() + n);
-    const cab = `<b>${UI.esc(rot)} (+${n} dias):</b> ${UI.esc(fmtLonga(d))}`;
-    if(diaOk(d, it.dias)) return `<div class="calc-res ok">${cab} <span aria-hidden="true">✔</span></div>`;
+    const cab = `<b>${UI.esc(rot)} (+${n} dias)</b><br>${UI.esc(fmtLonga(d))}`;
+    if(diaOk(d, it.dias))
+      return `<span class="rc ok" tabindex="0" aria-label="${UI.esc(rot)}, ${n} dias: ${UI.esc(fmtLonga(d))}">+${n}d · ${fmtCurta(d)} <span aria-hidden="true">✔</span><span class="pop" role="tooltip">${cab}</span></span>`;
     const motivo = it.dias
       ? `Este protocolo só é agendado às ${it.dias.map(i => NOMES_DIA[i]).join(' ou ')}.`
       : 'Cai no fim de semana.';
     const a = vizinho(d, it.dias, -1), p = vizinho(d, it.dias, 1);
     const alt = [a ? `antes: ${fmtCurta(a)}` : '', p ? `depois: ${fmtCurta(p)}` : ''].filter(Boolean).join(' · ');
-    return `<div class="calc-res warn">${cab}<br><span aria-hidden="true">⚠️</span> ${motivo}${alt ? ' Datas possíveis mais próximas → ' + alt : ''}</div>`;
+    return `<span class="rc warn" tabindex="0" aria-label="${UI.esc(rot)}, ${n} dias: ${UI.esc(fmtLonga(d))}. ${UI.esc(motivo)}">+${n}d · ${fmtCurta(d)} <span aria-hidden="true">⚠️</span><span class="pop" role="tooltip">${cab}<br>${motivo}${alt ? '<br>Datas possíveis mais próximas → ' + alt : ''}</span></span>`;
   }).join('');
 }
 
@@ -314,14 +314,27 @@ function limpar(){
 }
 
 /* ---------- cartões ---------- */
+const PRIOR = ['judic','leito','unicat','dia','p34','p19','sc'];
+function classeObs(it){
+  const k = PRIOR.find(k => it.flags.includes(k));
+  return k ? FLAGS.find(f => f.k === k).cls : '';
+}
+
 function card(it){
-  const selos = it.segs.map(s => `<span class="flag ${s.cls}">${s.cls ? '' : '<span aria-hidden="true">⚠️</span> '}${UI.esc(s.t)}</span>`).join('');
+  const st = calc[it.id] || {};
+  const obs = it.segs.length ? `<span class="obs">
+      <button type="button" class="obs-btn flag ${classeObs(it)}" aria-describedby="obs-${it.id}"><span aria-hidden="true">ⓘ</span> Observação</button>
+      <span class="pop" role="tooltip" id="obs-${it.id}">${it.segs.map(s => `<span class="flag ${s.cls}">${UI.esc(s.t)}</span>`).join('')}</span>
+    </span>` : '';
   return `<article class="proto ${it.cat.cls}" data-id="${it.id}">
     <h3>${UI.esc(it.nome)}</h3>
-    <div class="ret"><span class="ret-ico" aria-hidden="true">⏱️</span><span><b>Retorno:</b> ${UI.esc(it.intervalo)}</span></div>
-    <div class="flags">${selos}</div>
-    <div class="proto-foot">
-      <button type="button" class="calc-toggle" aria-haspopup="dialog" aria-label="Calcular data de retorno de ${UI.esc(it.nome)}"><span aria-hidden="true">📅</span> Calcular data de retorno</button>
+    <div class="ret">
+      <span class="ret-t"><span aria-hidden="true">⏱️</span> <b>Retorno:</b> ${UI.esc(it.intervalo)}</span>
+      ${obs}
+    </div>
+    <div class="calc-line">
+      <input type="date" class="calc-date" value="${UI.esc(st.date || '')}" ${it.opcoes ? '' : 'disabled'} title="Data da última aplicação" aria-label="Data da última aplicação de ${UI.esc(it.nome)}">
+      <div class="calc-out" aria-live="polite">${resultadoCalc(it, st.date)}</div>
     </div>
   </article>`;
 }
@@ -357,37 +370,19 @@ $('catChips').addEventListener('click', e => {
 $('limpar').addEventListener('click', limpar);
 $('copiarLink').addEventListener('click', () => UI.copy(location.href, 'Link copiado!'));
 
-function dataHoje(){
-  const h = new Date(), pad = n => String(n).padStart(2,'0');
-  return `${h.getFullYear()}-${pad(h.getMonth()+1)}-${pad(h.getDate())}`;
-}
-function abrirCalc(id){
-  const it = ITEMS[id], st = calc[id] = calc[id] || {};
-  const selos = it.segs.map(s => `<span class="flag ${s.cls}">${UI.esc(s.t)}</span>`).join('');
-  const m = UI.openModal({
-    title: it.nome,
-    sub: 'Retorno: ' + it.intervalo + ' · ' + it.cat.short,
-    html: `<div class="calc">
-      ${selos ? `<div class="flags">${selos}</div>` : ''}
-      <label for="calcData">Data da última aplicação</label>
-      <div class="calc-row">
-        <input type="date" id="calcData" class="calc-date" value="${UI.esc(st.date || '')}">
-        <button type="button" class="calc-hoje">Hoje</button>
-      </div>
-      <div class="calc-out" aria-live="polite"></div>
-    </div>`
-  });
-  const inp = m.body.querySelector('.calc-date'), out = m.body.querySelector('.calc-out');
-  const atualizar = () => { st.date = inp.value; out.innerHTML = resultadoCalc(it, st.date); };
-  inp.addEventListener('input', atualizar);
-  m.body.querySelector('.calc-hoje').addEventListener('click', () => { inp.value = dataHoje(); atualizar(); });
-  atualizar();
-  inp.focus();
-}
 $('lista').addEventListener('click', e => {
   if(e.target.closest('[data-act="limpar"]')){ limpar(); return; }
-  const b = e.target.closest('.calc-toggle'); if(!b) return;
-  abrirCalc(+b.closest('.proto').dataset.id);
+  const b = e.target.closest('.obs-btn');
+  document.querySelectorAll('.obs.open').forEach(o => { if(!b || o !== b.parentNode) o.classList.remove('open'); });
+  if(b) b.parentNode.classList.toggle('open');
+});
+document.addEventListener('click', e => { if(!e.target.closest('.obs')) document.querySelectorAll('.obs.open').forEach(o => o.classList.remove('open')); });
+$('lista').addEventListener('input', e => {
+  if(!e.target.classList.contains('calc-date')) return;
+  const art = e.target.closest('.proto'), id = +art.dataset.id;
+  const st = calc[id] = calc[id] || {};
+  st.date = e.target.value;
+  art.querySelector('.calc-out').innerHTML = resultadoCalc(ITEMS[id], st.date);
 });
 
 lerURL();

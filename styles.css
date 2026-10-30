@@ -859,42 +859,47 @@ body[data-page="radioterapia"] .slot .tm .t{display:inline-block;padding:2px 8px
 .u34{margin-top:-6px !important}
 .u35{margin:0 0 6px !important}
 
-/* ============================ QUIMIOTERAPIA (cartões padronizados, calculadora de retorno, barra de resultado) ============================ */
+/* ============================ QUIMIOTERAPIA (cartões compactos, observação em balão, calculadora de retorno) ============================ */
 body[data-page="quimioterapia"] .qbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}
 body[data-page="quimioterapia"] .qbar .result-count{margin:0 auto 0 0}
 body[data-page="quimioterapia"] .qbar .btn{padding:7px 12px}
 body[data-page="quimioterapia"] .qbar [hidden]{display:none}
 body[data-page="quimioterapia"] .nothing .btn{margin-top:14px}
 
-/* cartão: 4 linhas fixas (título · retorno · selos · botão) alinhadas entre os cartões da mesma fileira */
-body[data-page="quimioterapia"] .proto-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-body[data-page="quimioterapia"] .proto{display:grid;grid-row:span 4;grid-template-rows:subgrid;row-gap:10px;align-content:start;padding:16px 18px;border-radius:14px}
-body[data-page="quimioterapia"] .proto h3{font-size:15px;line-height:1.35;font-weight:800;overflow-wrap:break-word;min-width:0}
-body[data-page="quimioterapia"] .proto .ret{font-size:13px;line-height:1.45;font-weight:700;align-items:flex-start;gap:8px}
-body[data-page="quimioterapia"] .proto .ret-ico{flex:none;width:16px;text-align:center;font-size:13px;line-height:1.45}
-body[data-page="quimioterapia"] .flags{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;min-width:0}
-body[data-page="quimioterapia"] .flags .flag{margin:0;display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:1.35;font-weight:700;padding:4px 10px;border-radius:8px;max-width:100%}
-body[data-page="quimioterapia"] .proto-foot{align-self:end}
-body[data-page="quimioterapia"] .calc-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:34px;background:transparent;border:1px dashed var(--line);border-radius:10px;padding:0 10px;font-weight:700;font-size:12px;line-height:1;color:var(--text);transition:.2s}
-body[data-page="quimioterapia"] .calc-toggle:hover{border-color:var(--azul);border-style:solid;background:var(--bg)}
-@supports not (grid-template-rows:subgrid){
-  body[data-page="quimioterapia"] .proto{display:flex;flex-direction:column;grid-row:auto;gap:10px}
-  body[data-page="quimioterapia"] .proto-foot{margin-top:auto}
-}
+/* cartão: 3 linhas (nome · retorno + observação · calculadora), alinhadas entre os cartões da mesma fileira */
+body[data-page="quimioterapia"] .proto-grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+body[data-page="quimioterapia"] .proto{display:grid;grid-row:span 3;grid-template-rows:subgrid;row-gap:6px;align-content:start;padding:11px 14px 12px;border-radius:12px;border-left-width:4px;position:relative}
+body[data-page="quimioterapia"] .proto:hover,body[data-page="quimioterapia"] .proto:focus-within{z-index:5}
+body[data-page="quimioterapia"] .proto h3{font-size:14px;line-height:1.3;font-weight:800;overflow-wrap:break-word;min-width:0}
+body[data-page="quimioterapia"] .proto .ret{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:12px;line-height:1.4;font-weight:700;position:relative}
+body[data-page="quimioterapia"] .ret-t{min-width:0}
 
-/* janela da calculadora */
-body[data-page="quimioterapia"] .calc{display:flex;flex-direction:column;gap:10px}
-body[data-page="quimioterapia"] .calc .flags{margin-bottom:2px}
-body[data-page="quimioterapia"] .calc label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-body[data-page="quimioterapia"] .calc-row{display:flex;gap:8px}
-body[data-page="quimioterapia"] .calc-date{flex:1;min-width:0;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:14px}
-body[data-page="quimioterapia"] .calc-hoje{height:40px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:0 16px;font-weight:700;font-size:13px}
-body[data-page="quimioterapia"] .calc-hoje:hover{border-color:var(--azul)}
-body[data-page="quimioterapia"] .calc-out{display:flex;flex-direction:column;gap:8px}
-body[data-page="quimioterapia"] .calc-res{font-size:13px;line-height:1.5;padding:10px 12px;border-radius:10px}
-body[data-page="quimioterapia"] .calc-res.ok{background:var(--ok-bg);color:var(--ok)}
-body[data-page="quimioterapia"] .calc-res.warn{background:#fff8e1;color:#8d6e00}
-body[data-page="quimioterapia"] .calc-res.info{background:var(--bg);color:var(--muted)}
-html[data-tema="dark"] body[data-page="quimioterapia"] .calc-res.ok{color:#86efac}
-html[data-tema="dark"] body[data-page="quimioterapia"] .calc-res.warn{background:#4a3a0c;color:#fde68a}
-@media print{ body[data-page="quimioterapia"] .proto-foot,body[data-page="quimioterapia"] .qbar{display:none!important} }
+/* observação: botão que abre um balão ao passar o mouse (ou tocar / focar) */
+body[data-page="quimioterapia"] .obs{flex:none}
+body[data-page="quimioterapia"] .obs-btn{display:inline-flex;align-items:center;gap:4px;margin:0;font-size:11px;line-height:1.3;font-weight:700;padding:2px 8px;border-radius:999px;border:0;cursor:help;white-space:nowrap}
+body[data-page="quimioterapia"] .pop{display:none;position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:20;padding:10px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-lg);color:var(--text);font-size:12px;line-height:1.45;font-weight:600;white-space:normal}
+body[data-page="quimioterapia"] .obs .pop{flex-direction:column;align-items:flex-start;gap:6px}
+body[data-page="quimioterapia"] .obs:hover .pop,body[data-page="quimioterapia"] .obs:focus-within .pop,body[data-page="quimioterapia"] .obs.open .pop{display:flex}
+body[data-page="quimioterapia"] .pop .flag{margin:0;display:block;font-size:12px;line-height:1.35;font-weight:700;padding:4px 9px;border-radius:8px}
+
+/* calculadora: data + resultado na mesma linha */
+body[data-page="quimioterapia"] .calc-line{display:flex;align-items:center;gap:8px;position:relative;min-height:30px}
+body[data-page="quimioterapia"] .calc-date{flex:none;width:126px;height:30px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:12px}
+body[data-page="quimioterapia"] .calc-date:disabled{opacity:.45;cursor:not-allowed}
+body[data-page="quimioterapia"] .calc-out{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
+body[data-page="quimioterapia"] .calc-hint{font-size:11px;line-height:1.3;font-weight:600;color:var(--muted)}
+body[data-page="quimioterapia"] .rc{font-size:11.5px;line-height:1.3;font-weight:700;padding:3px 8px;border-radius:7px;cursor:help;white-space:nowrap}
+body[data-page="quimioterapia"] .rc.ok{background:var(--ok-bg);color:var(--ok)}
+body[data-page="quimioterapia"] .rc.warn{background:#fff8e1;color:#8d6e00}
+body[data-page="quimioterapia"] .rc:hover .pop,body[data-page="quimioterapia"] .rc:focus .pop{display:block}
+html[data-tema="dark"] body[data-page="quimioterapia"] .rc.ok{color:#86efac}
+html[data-tema="dark"] body[data-page="quimioterapia"] .rc.warn{background:#4a3a0c;color:#fde68a}
+@supports not (grid-template-rows:subgrid){
+  body[data-page="quimioterapia"] .proto{display:flex;flex-direction:column;grid-row:auto;gap:6px}
+}
+@media print{
+  body[data-page="quimioterapia"] .calc-line,body[data-page="quimioterapia"] .qbar{display:none!important}
+  body[data-page="quimioterapia"] .obs-btn{display:none}
+  body[data-page="quimioterapia"] .obs{display:block}
+  body[data-page="quimioterapia"] .obs .pop{display:flex;position:static;margin:0;padding:0;border:0;box-shadow:none}
+}
