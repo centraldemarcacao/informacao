@@ -241,7 +241,7 @@ CATS.forEach(c => (quimioData[c.key] || []).forEach(it => {
 }));
 
 const state = { cat:'all', q:'' };
-const calc  = {};   /* id do protocolo -> { open, date } (sobrevive aos filtros) */
+const calc  = {};   /* id do protocolo -> { date } (a última data digitada fica guardada) */
 
 function filtrando(){ return !!(state.q.trim() || state.cat !== 'all'); }
 
@@ -315,22 +315,13 @@ function limpar(){
 
 /* ---------- cartões ---------- */
 function card(it){
-  const st = calc[it.id] || {};
   const selos = it.segs.map(s => `<span class="flag ${s.cls}">${s.cls ? '' : '<span aria-hidden="true">⚠️</span> '}${UI.esc(s.t)}</span>`).join('');
   return `<article class="proto ${it.cat.cls}" data-id="${it.id}">
     <h3>${UI.esc(it.nome)}</h3>
-    <div class="ret"><span aria-hidden="true">⏱️</span><span><b>Retorno:</b> ${UI.esc(it.intervalo)}</span></div>
-    ${selos ? `<div class="flags">${selos}</div>` : ''}
-    <div class="calc-wrap">
-      <button type="button" class="calc-toggle" aria-expanded="${!!st.open}" aria-controls="calc-${it.id}"><span aria-hidden="true">📅</span> Calcular data de retorno</button>
-      <div class="calc" id="calc-${it.id}" ${st.open ? '' : 'hidden'}>
-        <label for="cd-${it.id}">Data da última aplicação</label>
-        <div class="calc-row">
-          <input type="date" id="cd-${it.id}" class="calc-date" value="${UI.esc(st.date || '')}">
-          <button type="button" class="calc-hoje">Hoje</button>
-        </div>
-        <div class="calc-out" aria-live="polite">${st.date ? resultadoCalc(it, st.date) : ''}</div>
-      </div>
+    <div class="ret"><span class="ret-ico" aria-hidden="true">⏱️</span><span><b>Retorno:</b> ${UI.esc(it.intervalo)}</span></div>
+    <div class="flags">${selos}</div>
+    <div class="proto-foot">
+      <button type="button" class="calc-toggle" aria-haspopup="dialog" aria-label="Calcular data de retorno de ${UI.esc(it.nome)}"><span aria-hidden="true">📅</span> Calcular data de retorno</button>
     </div>
   </article>`;
 }
@@ -366,37 +357,37 @@ $('catChips').addEventListener('click', e => {
 $('limpar').addEventListener('click', limpar);
 $('copiarLink').addEventListener('click', () => UI.copy(location.href, 'Link copiado!'));
 
-function atualizarCalc(art){
-  const it = ITEMS[+art.dataset.id], st = calc[it.id] || {};
-  art.querySelector('.calc-out').innerHTML = st.date ? resultadoCalc(it, st.date) : '';
+function dataHoje(){
+  const h = new Date(), pad = n => String(n).padStart(2,'0');
+  return `${h.getFullYear()}-${pad(h.getMonth()+1)}-${pad(h.getDate())}`;
+}
+function abrirCalc(id){
+  const it = ITEMS[id], st = calc[id] = calc[id] || {};
+  const selos = it.segs.map(s => `<span class="flag ${s.cls}">${UI.esc(s.t)}</span>`).join('');
+  const m = UI.openModal({
+    title: it.nome,
+    sub: 'Retorno: ' + it.intervalo + ' · ' + it.cat.short,
+    html: `<div class="calc">
+      ${selos ? `<div class="flags">${selos}</div>` : ''}
+      <label for="calcData">Data da última aplicação</label>
+      <div class="calc-row">
+        <input type="date" id="calcData" class="calc-date" value="${UI.esc(st.date || '')}">
+        <button type="button" class="calc-hoje">Hoje</button>
+      </div>
+      <div class="calc-out" aria-live="polite"></div>
+    </div>`
+  });
+  const inp = m.body.querySelector('.calc-date'), out = m.body.querySelector('.calc-out');
+  const atualizar = () => { st.date = inp.value; out.innerHTML = resultadoCalc(it, st.date); };
+  inp.addEventListener('input', atualizar);
+  m.body.querySelector('.calc-hoje').addEventListener('click', () => { inp.value = dataHoje(); atualizar(); });
+  atualizar();
+  inp.focus();
 }
 $('lista').addEventListener('click', e => {
   if(e.target.closest('[data-act="limpar"]')){ limpar(); return; }
-  const art = e.target.closest('.proto'); if(!art) return;
-  const id = +art.dataset.id;
-  const tg = e.target.closest('.calc-toggle');
-  if(tg){
-    const st = calc[id] = calc[id] || {};
-    st.open = !st.open;
-    tg.setAttribute('aria-expanded', st.open);
-    art.querySelector('.calc').hidden = !st.open;
-    if(st.open) art.querySelector('.calc-date').focus();
-    return;
-  }
-  if(e.target.closest('.calc-hoje')){
-    const h = new Date(), pad = n => String(n).padStart(2,'0');
-    const st = calc[id] = calc[id] || {};
-    st.date = `${h.getFullYear()}-${pad(h.getMonth()+1)}-${pad(h.getDate())}`;
-    art.querySelector('.calc-date').value = st.date;
-    atualizarCalc(art);
-  }
-});
-$('lista').addEventListener('input', e => {
-  if(!e.target.classList.contains('calc-date')) return;
-  const art = e.target.closest('.proto');
-  const st = calc[+art.dataset.id] = calc[+art.dataset.id] || {};
-  st.date = e.target.value;
-  atualizarCalc(art);
+  const b = e.target.closest('.calc-toggle'); if(!b) return;
+  abrirCalc(+b.closest('.proto').dataset.id);
 });
 
 lerURL();
