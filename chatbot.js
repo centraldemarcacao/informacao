@@ -50,7 +50,7 @@
 
   var head = el('div', 'lg-head');
   head.appendChild(el('div', 'lg-av', '🤖'));
-  var t = el('div', 'lg-t'); t.appendChild(el('strong', null, TITULO)); t.appendChild(el('small', null, 'Responde com base nas páginas deste site'));
+  var t = el('div', 'lg-t'); t.appendChild(el('strong', null, TITULO)); t.appendChild(el('small', null, 'Responde com base neste site'));
   head.appendChild(t);
   var bNovo = el('button', null, '↺'); bNovo.type = 'button'; bNovo.title = 'Nova conversa'; bNovo.setAttribute('aria-label', 'Nova conversa');
   var bFechar = el('button', null, '✕'); bFechar.type = 'button'; bFechar.title = 'Fechar'; bFechar.setAttribute('aria-label', 'Fechar assistente');
