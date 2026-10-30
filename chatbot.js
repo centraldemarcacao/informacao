@@ -14,7 +14,7 @@
   var MAX_CHARS = 1500;        // mesmo limite do Worker
   var TIMEOUT_MS = 60000;
   var PAGINAS = ['index', 'oncologia', 'quimioterapia', 'radioterapia', 'ultrassonografia', 'anotacoes', 'telefonia', 'triagem'];
-  var SUGESTOES = ['Quais médicos atendem Mama?', 'Qual o intervalo de retorno da Zoladex?', 'Qual o telefone das secretárias?', 'Como registrar uma triagem?'];
+  var SUGESTOES = ['Quais médicos atendem Mama?', 'Qual o intervalo de retorno da Capecitabina?', 'Telefone do Pronto-Socorro', 'Como registrar uma triagem?'];
 
   var historico = [];          // [{role, content}]
   var ocupado = false, ctrl = null;
@@ -27,7 +27,9 @@
   /* ---------- markdown mínimo e seguro (escapa HTML antes) ---------- */
   function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function inline(s) {
-    s = esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = esc(s)
+      .replace(/\*\*\s*([^*]+?)\s*\*\*/g, '<strong>$1</strong>')   // **negrito** (markdown)
+      .replace(/\*\s*([^*\n]+?)\s*\*/g, '<strong>$1</strong>');    // *negrito* (estilo WhatsApp usado nas mensagens prontas)
     return s.replace(new RegExp('\\b(' + PAGINAS.join('|') + ')\\.html\\b', 'g'), '<a href="$1.html">$1.html</a>');
   }
   function render(md) {
