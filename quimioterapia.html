@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quimioterapia • Central de Marcação</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,7 +15,7 @@
 <section class="hero">
   <div class="hero-inner">
     <div>
-      <span class="eyebrow">💉 Quimioterapia</span>
+      <span class="eyebrow"><span aria-hidden="true">💉</span> Quimioterapia</span>
       <h1>Medicações</h1>
       <p>Consulte o intervalo de retorno de cada medicação e as observações para o agendamento.</p>
     </div>
@@ -24,10 +25,10 @@
 <main class="wrap" id="conteudo">
 
   <div class="kpis">
-    <div class="kpi"><div class="kpi-ico">📋</div><div><b id="kTotal">0</b><span>Protocolos</span></div></div>
-    <div class="kpi"><div class="kpi-ico">💊</div><div><b id="kOral">0</b><span>Orais</span></div></div>
-    <div class="kpi"><div class="kpi-ico">💉</div><div><b id="kSus">0</b><span>Injetáveis</span></div></div>
-    <div class="kpi"><div class="kpi-ico">🩸</div><div><b id="kHem">0</b><span>Hematologia</span></div></div>
+    <div class="kpi"><div class="kpi-ico" aria-hidden="true">📋</div><div><b id="kTotal">0</b><span>Protocolos</span></div></div>
+    <div class="kpi"><div class="kpi-ico" aria-hidden="true">💊</div><div><b id="kOral">0</b><span>Orais</span></div></div>
+    <div class="kpi"><div class="kpi-ico" aria-hidden="true">💉</div><div><b id="kSus">0</b><span>Injetáveis</span></div></div>
+    <div class="kpi"><div class="kpi-ico" aria-hidden="true">🩸</div><div><b id="kHem">0</b><span>Hematologia</span></div></div>
   </div>
 
   <div class="toolbar">
@@ -39,6 +40,14 @@
     <span class="chips-label">Observação</span>
     <div class="chips" id="flagChips"></div>
   </div>
+
+  <div class="qbar">
+    <p class="result-count" id="resultado" role="status" aria-live="polite"></p>
+    <button type="button" class="btn ghost" id="limpar" hidden>✕ Limpar filtros</button>
+    <button type="button" class="btn ghost" id="copiarLink"><span aria-hidden="true">🔗</span> Copiar link</button>
+  </div>
+
+  <noscript><div class="nothing">Esta página precisa de JavaScript para mostrar a lista de protocolos.</div></noscript>
 
   <div id="lista"></div>
   <div class="page-end"></div>
@@ -167,56 +176,173 @@ const quimioData = {
 };
 
 const CATS = [
-  { key:'Quimioterápicos Orais', short:'Orais',          cls:'cat-oral',   ico:'💊' },
-  { key:'Quimioterápicos Injetáveis',      short:'Injetáveis', cls:'cat-sus-inj',ico:'💉' },
-  { key:'Quimioterápicos da Hematologia',           short:'Hematologia',    cls:'cat-hemato', ico:'🩸' }
+  { key:'Quimioterápicos Orais',           short:'Orais',       slug:'orais',      cls:'cat-oral',    ico:'💊' },
+  { key:'Quimioterápicos Injetáveis',      short:'Injetáveis',  slug:'injetaveis', cls:'cat-sus-inj', ico:'💉' },
+  { key:'Quimioterápicos da Hematologia',  short:'Hematologia', slug:'hematologia',cls:'cat-hemato',  ico:'🩸' }
 ];
 
-/* filtros rápidos criados a partir do texto da observação (a ordem define a cor do selo) */
+/* filtros rápidos criados a partir do texto da observação (cada trecho da observação vira um selo) */
 const FLAGS = [
   { k:'judic',  label:'Judicializado',   cls:'judic',    test:/judicializ/ },
   { k:'unicat', label:'UNICAT',          cls:'unicat',   test:/unicat/ },
   { k:'leito',  label:'Leito',           cls:'leito',    test:/leito/ },
   { k:'sc',     label:'Via SC',          cls:'sc',       test:/\bsc\b|subcutan/ },
-  { k:'dia',    label:'Dia restrito',    cls:'dia',      test:/tercas ou quartas|quintas ou sextas|apenas sextas/ },
+  { k:'dia',    label:'Dia restrito',    cls:'dia',      test:/tercas? ou quartas?|quintas? ou sextas?|apenas sextas?/ },
   { k:'p34',    label:'Poltronas 05–34', cls:'poltrona', test:/poltronas 05 a 34/ },
   { k:'p19',    label:'Poltronas 05–19', cls:'poltrona', test:/poltronas 05 a 19/ },
   { k:'evol',   label:'Checar evolução', cls:'',         test:/(checar|conforme) evolu/ }
 ];
 
 const $ = id => document.getElementById(id);
+const NOMES_DIA = ['domingos','segundas','terças','quartas','quintas','sextas','sábados'];
 
-/* lista única com a categoria e os filtros de cada protocolo */
+/* ---------- observação -> trechos (selos) ---------- */
+function segmentos(obs){
+  const out = [];
+  String(obs || '').split(/\s+[-–\/]\s+/).forEach(s => {
+    s = s.trim(); if(!s) return;
+    const m = s.match(/^(.*?)\s*\((checar evolução|conforme evolução[^)]*)\)\s*$/i);
+    if(m && m[1]){ out.push(m[1]); out.push(m[2].charAt(0).toUpperCase() + m[2].slice(1)); }
+    else out.push(s);
+  });
+  return out;
+}
+
+/* dias da semana em que o protocolo só pode ser agendado (null = qualquer dia útil) */
+function diasPermitidos(obsNorm){
+  if(/tercas? ou quartas?/.test(obsNorm)) return [2,3];
+  if(/quintas? ou sextas?/.test(obsNorm)) return [4,5];
+  if(/apenas sextas?/.test(obsNorm))      return [5];
+  return null;
+}
+
+/* intervalos (em dias) que dá para calcular; null = depende do protocolo/prescrição */
+function opcoesIntervalo(intervalo){
+  const t = UI.norm(intervalo);
+  let m = t.match(/cada\s+([\d,\sou]+?)\s+dias/);
+  if(!m && /^semanal/.test(t)) return [7];
+  if(!m) m = t.match(/^(\d+(?:\s*(?:,|ou)\s*\d+)*)\s+dias/);
+  return m ? m[1].match(/\d+/g).map(Number) : null;
+}
+
+function rotuloRetorno(intervalo){
+  const t = UI.norm(intervalo);
+  if(/^semanal/.test(t)) return 'Próxima aplicação';
+  if(/cada|^d\d/.test(t)) return 'Início do próximo ciclo (D1)';
+  return 'Retorno';
+}
+
+/* lista única com a categoria, os selos e os filtros de cada protocolo */
 const ITEMS = [];
 CATS.forEach(c => (quimioData[c.key] || []).forEach(it => {
   const o = UI.norm(it.obs || '');
-  const fl = FLAGS.filter(f => f.test.test(o));
-  ITEMS.push({ ...it, cat:c, flags:fl.map(f => f.k), fcls: fl.length ? fl[0].cls : '' });
+  const segs = segmentos(it.obs).map(t => {
+    const f = FLAGS.filter(f => f.test.test(UI.norm(t)));
+    return { t, cls: f.length ? f[0].cls : '' };
+  });
+  ITEMS.push({ ...it, id: ITEMS.length, cat:c, segs,
+    flags: FLAGS.filter(f => f.test.test(o)).map(f => f.k),
+    dias: diasPermitidos(o), opcoes: opcoesIntervalo(it.intervalo) });
 }));
 
-const state = { cat:'all', flag:'all', q:'' };
+const state = { cat:'all', flags:new Set(), q:'' };
+const calc  = {};   /* id do protocolo -> { open, date } (sobrevive aos filtros) */
+
+function filtrando(){ return !!(state.q.trim() || state.cat !== 'all' || state.flags.size); }
 
 function matches(it){
   const q = UI.norm(state.q.trim());
   return (state.cat==='all' || it.cat.key===state.cat) &&
-         (state.flag==='all' || it.flags.includes(state.flag)) &&
+         [...state.flags].every(k => it.flags.includes(k)) &&
          (!q || UI.norm(it.nome + ' ' + it.intervalo + ' ' + (it.obs||'')).includes(q));
 }
 
-function renderChips(){
-  $('catChips').innerHTML =
-    `<button class="chip ${state.cat==='all'?'active':''}" data-c="all">Todos <em>${ITEMS.length}</em></button>` +
-    CATS.map(c => `<button class="chip ${state.cat===c.key?'active':''}" data-c="${UI.esc(c.key)}">${c.ico} ${c.short} <em>${ITEMS.filter(i=>i.cat===c).length}</em></button>`).join('');
-  $('flagChips').innerHTML =
-    `<button class="chip ${state.flag==='all'?'active':''}" data-fl="all">Todas</button>` +
-    FLAGS.map(f => `<button class="chip ${state.flag===f.k?'active':''}" data-fl="${f.k}">${f.label} <em>${ITEMS.filter(i=>i.flags.includes(f.k)).length}</em></button>`).join('');
+/* ---------- calculadora de data de retorno ---------- */
+function parseData(v){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+  return m ? new Date(+m[1], +m[2]-1, +m[3], 12) : null;
+}
+function fmtLonga(d){ return d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' }); }
+function fmtCurta(d){ return d.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' }).replace('.', ''); }
+function diaOk(d, dias){ const w = d.getDay(); return dias ? dias.includes(w) : (w >= 1 && w <= 5); }
+function vizinho(d, dias, passo){
+  const x = new Date(d);
+  for(let i = 0; i < 21; i++){ x.setDate(x.getDate() + passo); if(diaOk(x, dias)) return new Date(x); }
+  return null;
 }
 
+function resultadoCalc(it, valor){
+  if(!it.opcoes)
+    return `<div class="calc-res info">Este protocolo não tem intervalo fixo (“${UI.esc(it.intervalo)}”). Confira a data na prescrição ou na evolução médica.</div>`;
+  const base = parseData(valor);
+  if(!base) return `<div class="calc-res info">Informe a data da última aplicação para ver o retorno.</div>`;
+  const rot = rotuloRetorno(it.intervalo);
+  return it.opcoes.map(n => {
+    const d = new Date(base); d.setDate(d.getDate() + n);
+    const cab = `<b>${UI.esc(rot)} (+${n} dias):</b> ${UI.esc(fmtLonga(d))}`;
+    if(diaOk(d, it.dias)) return `<div class="calc-res ok">${cab} <span aria-hidden="true">✔</span></div>`;
+    const motivo = it.dias
+      ? `Este protocolo só é agendado às ${it.dias.map(i => NOMES_DIA[i]).join(' ou ')}.`
+      : 'Cai no fim de semana.';
+    const a = vizinho(d, it.dias, -1), p = vizinho(d, it.dias, 1);
+    const alt = [a ? `antes: ${fmtCurta(a)}` : '', p ? `depois: ${fmtCurta(p)}` : ''].filter(Boolean).join(' · ');
+    return `<div class="calc-res warn">${cab}<br><span aria-hidden="true">⚠️</span> ${motivo}${alt ? ' Datas possíveis mais próximas → ' + alt : ''}</div>`;
+  }).join('');
+}
+
+/* ---------- filtros, contadores e URL ---------- */
+function renderChips(){
+  $('catChips').innerHTML =
+    `<button type="button" class="chip ${state.cat==='all'?'active':''}" data-c="all" aria-pressed="${state.cat==='all'}">Todos <em>${ITEMS.length}</em></button>` +
+    CATS.map(c => `<button type="button" class="chip ${state.cat===c.key?'active':''}" data-c="${UI.esc(c.key)}" aria-pressed="${state.cat===c.key}"><span aria-hidden="true">${c.ico}</span> ${c.short} <em>${ITEMS.filter(i=>i.cat===c).length}</em></button>`).join('');
+  $('flagChips').innerHTML =
+    `<button type="button" class="chip ${!state.flags.size?'active':''}" data-fl="all" aria-pressed="${!state.flags.size}">Todas</button>` +
+    FLAGS.map(f => `<button type="button" class="chip ${state.flags.has(f.k)?'active':''}" data-fl="${f.k}" aria-pressed="${state.flags.has(f.k)}">${f.label} <em>${ITEMS.filter(i=>i.flags.includes(f.k)).length}</em></button>`).join('');
+}
+
+function salvarURL(){
+  const p = new URLSearchParams();
+  if(state.q.trim()) p.set('q', state.q.trim());
+  if(state.cat !== 'all') p.set('cat', CATS.find(c => c.key === state.cat).slug);
+  if(state.flags.size) p.set('obs', [...state.flags].join(','));
+  const s = p.toString();
+  try{ history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); }catch(e){}
+}
+
+function lerURL(){
+  const p = new URLSearchParams(location.search);
+  state.q = p.get('q') || '';
+  const c = CATS.find(c => c.slug === p.get('cat'));
+  state.cat = c ? c.key : 'all';
+  (p.get('obs') || '').split(',').forEach(k => { if(FLAGS.some(f => f.k === k)) state.flags.add(k); });
+  $('busca').value = state.q;
+}
+
+function limpar(){
+  state.q = ''; state.cat = 'all'; state.flags.clear();
+  $('busca').value = '';
+  renderChips(); render();
+}
+
+/* ---------- cartões ---------- */
 function card(it){
-  return `<article class="proto ${it.cat.cls}">
+  const st = calc[it.id] || {};
+  const selos = it.segs.map(s => `<span class="flag ${s.cls}">${s.cls ? '' : '<span aria-hidden="true">⚠️</span> '}${UI.esc(s.t)}</span>`).join('');
+  return `<article class="proto ${it.cat.cls}" data-id="${it.id}">
     <h3>${UI.esc(it.nome)}</h3>
-    <div class="ret">⏱️ <span><b>Retorno:</b> ${UI.esc(it.intervalo)}</span></div>
-    ${it.obs ? `<span class="flag ${it.fcls}">⚠️ ${UI.esc(it.obs)}</span>` : ''}
+    <div class="ret"><span aria-hidden="true">⏱️</span><span><b>Retorno:</b> ${UI.esc(it.intervalo)}</span></div>
+    ${selos ? `<div class="flags">${selos}</div>` : ''}
+    <div class="calc-wrap">
+      <button type="button" class="calc-toggle" aria-expanded="${!!st.open}" aria-controls="calc-${it.id}"><span aria-hidden="true">📅</span> Calcular data de retorno</button>
+      <div class="calc" id="calc-${it.id}" ${st.open ? '' : 'hidden'}>
+        <label for="cd-${it.id}">Data da última aplicação</label>
+        <div class="calc-row">
+          <input type="date" id="cd-${it.id}" class="calc-date" value="${UI.esc(st.date || '')}">
+          <button type="button" class="calc-hoje">Hoje</button>
+        </div>
+        <div class="calc-out" aria-live="polite">${st.date ? resultadoCalc(it, st.date) : ''}</div>
+      </div>
+    </div>
   </article>`;
 }
 
@@ -227,17 +353,22 @@ function render(){
   $('kSus').textContent  = list.filter(i=>i.cat===CATS[1]).length;
   $('kHem').textContent  = list.filter(i=>i.cat===CATS[2]).length;
 
+  $('resultado').textContent = `Exibindo ${list.length} de ${ITEMS.length} protocolos`;
+  $('limpar').hidden = !filtrando();
+
   const html = CATS.map(c => {
     const items = list.filter(i => i.cat===c);
     if(!items.length) return '';
     return `<section class="section ${c.cls}">
-      <div class="sec-head"><h2>${c.ico} ${UI.esc(c.key)}</h2><span class="count-pill">${items.length}</span></div>
+      <div class="sec-head"><h2><span aria-hidden="true">${c.ico}</span> ${UI.esc(c.key)}</h2><span class="count-pill">${items.length}</span></div>
       <div class="proto-grid">${items.map(card).join('')}</div>
     </section>`;
   }).join('');
-  $('lista').innerHTML = html || '<div class="nothing"><big>🔎</big>Nenhum protocolo encontrado</div>';
+  $('lista').innerHTML = html || '<div class="nothing"><big aria-hidden="true">🔎</big>Nenhum protocolo encontrado<br><button type="button" class="btn" data-act="limpar">Limpar filtros</button></div>';
+  salvarURL();
 }
 
+/* ---------- eventos ---------- */
 $('busca').addEventListener('input', UI.debounce(e => { state.q = e.target.value; render(); }, 100));
 $('catChips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if(!b) return;
@@ -245,9 +376,49 @@ $('catChips').addEventListener('click', e => {
 });
 $('flagChips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if(!b) return;
-  state.flag = b.dataset.fl; renderChips(); render();
+  const k = b.dataset.fl;
+  if(k === 'all') state.flags.clear();
+  else if(state.flags.has(k)) state.flags.delete(k);
+  else state.flags.add(k);
+  renderChips(); render();
+});
+$('limpar').addEventListener('click', limpar);
+$('copiarLink').addEventListener('click', () => UI.copy(location.href, 'Link copiado!'));
+
+function atualizarCalc(art){
+  const it = ITEMS[+art.dataset.id], st = calc[it.id] || {};
+  art.querySelector('.calc-out').innerHTML = st.date ? resultadoCalc(it, st.date) : '';
+}
+$('lista').addEventListener('click', e => {
+  if(e.target.closest('[data-act="limpar"]')){ limpar(); return; }
+  const art = e.target.closest('.proto'); if(!art) return;
+  const id = +art.dataset.id;
+  const tg = e.target.closest('.calc-toggle');
+  if(tg){
+    const st = calc[id] = calc[id] || {};
+    st.open = !st.open;
+    tg.setAttribute('aria-expanded', st.open);
+    art.querySelector('.calc').hidden = !st.open;
+    if(st.open) art.querySelector('.calc-date').focus();
+    return;
+  }
+  if(e.target.closest('.calc-hoje')){
+    const h = new Date(), pad = n => String(n).padStart(2,'0');
+    const st = calc[id] = calc[id] || {};
+    st.date = `${h.getFullYear()}-${pad(h.getMonth()+1)}-${pad(h.getDate())}`;
+    art.querySelector('.calc-date').value = st.date;
+    atualizarCalc(art);
+  }
+});
+$('lista').addEventListener('input', e => {
+  if(!e.target.classList.contains('calc-date')) return;
+  const art = e.target.closest('.proto');
+  const st = calc[+art.dataset.id] = calc[+art.dataset.id] || {};
+  st.date = e.target.value;
+  atualizarCalc(art);
 });
 
+lerURL();
 renderChips();
 render();
 </script>

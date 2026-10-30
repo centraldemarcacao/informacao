@@ -858,3 +858,29 @@ body[data-page="radioterapia"] .slot .tm .t{display:inline-block;padding:2px 8px
 .u33{flex:1 !important;margin:0 !important}
 .u34{margin-top:-6px !important}
 .u35{margin:0 0 6px !important}
+
+/* ============================ QUIMIOTERAPIA (selos, calculadora de retorno, barra de resultado) ============================ */
+body[data-page="quimioterapia"] .qbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}
+body[data-page="quimioterapia"] .qbar .result-count{margin:0 auto 0 0}
+body[data-page="quimioterapia"] .qbar .btn{padding:7px 12px}
+body[data-page="quimioterapia"] .qbar [hidden]{display:none}
+body[data-page="quimioterapia"] .nothing .btn{margin-top:14px}
+body[data-page="quimioterapia"] .flags{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+body[data-page="quimioterapia"] .flags .flag{margin-top:0}
+body[data-page="quimioterapia"] .calc-toggle{width:100%;text-align:left;background:transparent;border:1px dashed var(--line);border-radius:10px;padding:7px 10px;font-weight:700;font-size:.78rem;color:var(--text);transition:.2s}
+body[data-page="quimioterapia"] .calc-toggle:hover{border-color:var(--azul);border-style:solid}
+body[data-page="quimioterapia"] .calc{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+body[data-page="quimioterapia"] .calc[hidden]{display:none}
+body[data-page="quimioterapia"] .calc label{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+body[data-page="quimioterapia"] .calc-row{display:flex;gap:8px}
+body[data-page="quimioterapia"] .calc-date{flex:1;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:.85rem}
+body[data-page="quimioterapia"] .calc-hoje{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:0 12px;font-weight:700;font-size:.8rem}
+body[data-page="quimioterapia"] .calc-hoje:hover{border-color:var(--azul)}
+body[data-page="quimioterapia"] .calc-res{font-size:.8rem;line-height:1.4;padding:7px 10px;border-radius:8px;margin-top:2px}
+body[data-page="quimioterapia"] .calc-res.ok{background:var(--ok-bg);color:var(--ok)}
+body[data-page="quimioterapia"] .calc-res.warn{background:#fff8e1;color:#8d6e00}
+body[data-page="quimioterapia"] .calc-res.info{background:var(--bg);color:var(--muted)}
+html[data-tema="dark"] body[data-page="quimioterapia"] .calc-res.ok{color:#86efac}
+html[data-tema="dark"] body[data-page="quimioterapia"] .calc-res.warn{background:#4a3a0c;color:#fde68a}
+@media print{ body[data-page="quimioterapia"] .calc-wrap,body[data-page="quimioterapia"] .qbar{display:none!important} }
+body[data-page="quimioterapia"] .proto-grid{align-items:start}
