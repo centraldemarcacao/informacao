@@ -228,12 +228,12 @@
       if (s) { e.preventDefault(); s.focus(); s.select(); }
     }
   });
-   
-  /* ---------- chatbot de IA ---------- */
-  if (current !== 'painel') {
+  /* ---------- chatbot de IA (assistente da Central) ---------- */
+  if (current !== 'painel') {   // não aparece no Painel de Controle
     var lk = document.createElement('link'); lk.rel = 'stylesheet'; lk.href = 'chatbot.css'; document.head.appendChild(lk);
     var sc = document.createElement('script'); sc.src = 'chatbot.js';
     sc.setAttribute('data-endpoint', 'https://chatbot-liga.centraldemarcacao.workers.dev');
+    sc.setAttribute('data-avatar', 'assistente.png');
     document.body.appendChild(sc);
   }
 })();
