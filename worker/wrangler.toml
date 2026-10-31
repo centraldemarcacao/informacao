@@ -1,0 +1,36 @@
+name = "chatbot-liga"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Origens (sem barra final e sem caminho!) que podem chamar o Worker. Separe por vírgula.
+ALLOWED_ORIGINS = "https://centraldemarcacao.github.io"
+
+# Provedor principal: "gemini" (grátis, Google) | "workers-ai" (grátis, Cloudflare, sem chave) | "anthropic" (pago)
+PROVIDER = "gemini"
+MODEL = "gemini-3.5-flash-lite"
+
+# Reservas, em ordem, usadas quando o principal falha ou a cota acaba. Formato "provedor:modelo".
+# 1º um segundo modelo Gemini (a cota gratuita costuma ser separada por modelo); 2º a IA da própria Cloudflare.
+FALLBACKS = "gemini:gemini-3.6-flash,workers-ai:@cf/google/gemma-4-26b-a4b-it"
+
+# "off" = sempre enviar a base completa (mais lento e gasta mais cota). Padrão: só os trechos relevantes.
+# RETRIEVAL = "off"
+
+# IA da Cloudflare: grátis até 10.000 neurons/dia, sem chave. Usada na BUSCA POR SIGNIFICADO e como plano B.
+[ai]
+binding = "AI"
+
+# Guarda os vetores da busca por significado. Sem "id": o Wrangler cria o espaço sozinho no próximo `wrangler deploy`.
+[[kv_namespaces]]
+binding = "VETORES"
+
+# Para desligar só a busca por significado (continua a busca por palavras): BUSCA_SEMANTICA = "off" em [vars]
+
+# Limite de perguntas por IP (requer wrangler >= 4.36).
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 6       # perguntas...
+  period = 60     # ...a cada 60 segundos, por IP e por região (aceita só 10 ou 60)
