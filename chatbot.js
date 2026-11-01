@@ -114,7 +114,7 @@
   var ta = el('textarea'); ta.rows = 1; ta.maxLength = MAX_CHARS; ta.placeholder = 'Descreva sua dúvida de atendimento'; ta.setAttribute('aria-label', 'Sua pergunta');
   var send = el('button', 'lg-send'); send.type = 'submit'; send.setAttribute('aria-label', 'Enviar'); send.title = 'Enviar'; send.innerHTML = ICO.enviar;
   form.appendChild(ta); form.appendChild(send);
-  var foot = el('div', 'lg-foot', 'O assistente pode conter imprecisões; confirme informações críticas com a coordenação. Não informe dados de pacientes (nome, CPF, exames), em conformidade com a LGPD.');
+  var foot = el('div', 'lg-foot', 'O assistente de IA pode conter imprecisões; consulte maiores informações com o seu gestor ou responsável do setor.');
 
   panel.appendChild(head); panel.appendChild(aviso); panel.appendChild(msgs); panel.appendChild(form); panel.appendChild(foot);
   root.appendChild(panel); root.appendChild(launch); document.body.appendChild(root);
