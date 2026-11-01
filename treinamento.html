@@ -21,7 +21,7 @@
     <div class="today-box">
       <small>Seu progresso</small>
       <strong id="heroProg">—</strong>
-      <span id="heroWho">Visitante: progresso salvo apenas neste navegador</span>
+      <span id="heroWho">Visitante: progresso não é salvo</span>
     </div>
   </div>
 </section>
@@ -70,25 +70,16 @@ const ABAS = [
 
 /* ===================== progresso ===================== */
 /* prog = { licoes: {'mod/id': 'dd/mm/aaaa'}, quiz: {mod: {melhor, tent, data}}, sim: {...}, cartoes: {mod: 'data'} }
-   Visitante: fica só neste navegador. Quem entrou: também vai para o perfil (campo "treino"). */
-const LS = 'tr_prog';
+   REGRA: o progresso pertence a CADA USUÁRIO e é gravado somente no perfil da conta (campo "treino").
+   Visitante (sem login): nada é salvo; o treinamento sempre começa do zero e o que for feito vale só até fechar/atualizar a página.
+   O navegador (localStorage) NÃO guarda mais progresso, para não vazar de um usuário para outro. */
 const vazio = () => ({ licoes: {}, quiz: {}, sim: {}, cartoes: {} });
-let prog = Object.assign(vazio(), UI.store.get(LS, {}));
+const clonar = o => { try { return JSON.parse(JSON.stringify(o || {})); } catch (e) { return {}; } };
+try { localStorage.removeItem('tr_prog'); } catch (e) {}   /* remove progresso antigo guardado no navegador */
+let prog = vazio();
 
-function unir(a, b) {
-  const r = Object.assign(vazio(), JSON.parse(JSON.stringify(a || {})));
-  b = b || {};
-  Object.assign(r.licoes, b.licoes || {}, r.licoes);
-  Object.assign(r.cartoes, b.cartoes || {}, r.cartoes);
-  ['quiz', 'sim'].forEach(k => Object.keys(b[k] || {}).forEach(m => {
-    const x = r[k][m], y = b[k][m];
-    if (!x || (y.melhor || 0) > (x.melhor || 0)) r[k][m] = Object.assign({}, y, x ? { tent: Math.max(x.tent || 0, y.tent || 0) } : {});
-  }));
-  return r;
-}
 function salvar() {
-  UI.store.set(LS, prog);
-  if (window.Core && Core.perfil) Core.salvarPerfil({ treino: prog });
+  if (window.Core && Core.perfil) Core.salvarPerfil({ treino: prog });   /* só quem está logado grava */
   pintarTopo();
 }
 
@@ -382,15 +373,16 @@ render();
 /* Quem entrou: junta o progresso do navegador com o da conta e passa a gravar na conta */
 Core.init({ allowCreate: false, onChange: st => {
   const quem = $('#heroWho');
+  /* a cada entrada/saída, zera o estado da tela e carrega SOMENTE o progresso do usuário atual (ou vazio, se visitante) */
+  Object.keys(qz).forEach(k => delete qz[k]); arv = null; fc = null; licaoId = null;
   if (st.logado && Core.perfil) {
-    prog = unir(Core.perfil.treino, prog);
+    prog = Object.assign(vazio(), clonar(Core.perfil.treino));
     quem.textContent = Core.nomeUser() + ': progresso salvo na conta';
-    salvar(); render();
   } else {
-    prog = Object.assign(vazio(), UI.store.get(LS, {}));
-    quem.textContent = 'Visitante: progresso salvo apenas neste navegador';
-    render();
+    prog = vazio();
+    quem.textContent = 'Visitante: progresso não é salvo';
   }
+  render();
 } });
 })();
 </script>
