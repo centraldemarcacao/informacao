@@ -940,7 +940,7 @@ body[data-page="treinamento"] .tr-tabs{display:flex;gap:6px;margin:18px 0 16px;o
 body[data-page="treinamento"] .tr-tabs button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--muted);padding:10px 16px;border-radius:12px;font-weight:700;font-size:.88rem;transition:.2s;white-space:nowrap}
 body[data-page="treinamento"] .tr-tabs button:hover{color:var(--text);border-color:#cbd5e1}
 body[data-page="treinamento"] .tr-tabs button.active{background:var(--navy);border-color:var(--navy);color:#fff}
-body[data-page="treinamento"] #view{padding-bottom:48px}
+body[data-page="treinamento"] #view{padding-bottom:110px}
 
 /* lições */
 body[data-page="treinamento"] .tr-split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
@@ -995,10 +995,11 @@ body[data-page="treinamento"] .btn:disabled{opacity:.4;cursor:not-allowed;transf
 body[data-page="treinamento"] .tr-trail{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px}
 body[data-page="treinamento"] .tr-trail li{border-left:3px solid var(--verde);padding:4px 12px;background:color-mix(in srgb,var(--verde) 8%,transparent);border-radius:0 8px 8px 0}
 body[data-page="treinamento"] .tr-trail small{display:block;color:var(--muted);font-size:.74rem}
-body[data-page="treinamento"] .tr-q h4{margin:0 0 14px;font-size:1.15rem;color:var(--navy)}
+body[data-page="treinamento"] .tr-q h4{overflow-wrap:anywhere;word-break:break-word;line-height:1.4;margin:0 0 14px;font-size:1.15rem;color:var(--navy)}
 body[data-page="treinamento"] .tr-opts{display:flex;flex-direction:column;gap:10px}
-body[data-page="treinamento"] .tr-opt{display:flex;align-items:flex-start;gap:12px;text-align:left;border:2px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:13px 16px;font-weight:600;font-size:.95rem;transition:.18s}
+body[data-page="treinamento"] .tr-opt{display:flex;align-items:flex-start;gap:12px;width:100%;min-width:0;box-sizing:border-box;text-align:left;line-height:1.45;overflow-wrap:anywhere;word-break:break-word;border:2px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:13px 16px;font-weight:600;font-size:.95rem;transition:.18s}
 body[data-page="treinamento"] .tr-opt:hover:not(:disabled){border-color:var(--azul);transform:translateX(3px)}
+body[data-page="treinamento"] .tr-opt>span:not(.lt){flex:1 1 0;min-width:0}
 body[data-page="treinamento"] .tr-opt .lt{flex:none;width:26px;height:26px;border-radius:50%;background:var(--line);color:var(--muted);display:grid;place-items:center;font-size:.78rem;font-weight:800}
 body[data-page="treinamento"] .tr-opt.right{border-color:var(--verde);background:color-mix(in srgb,var(--verde) 12%,transparent)}
 body[data-page="treinamento"] .tr-opt.right .lt{background:var(--verde);color:#fff}
@@ -1015,13 +1016,16 @@ body[data-page="treinamento"] .tr-result ul{margin:0;padding-left:20px}
 body[data-page="treinamento"] .tr-result li{margin:5px 0}
 
 /* cartões */
-body[data-page="treinamento"] .tr-fc-meta{display:flex;align-items:center;gap:14px;margin-bottom:16px;font-size:.85rem;color:var(--muted);font-weight:600}
-body[data-page="treinamento"] .tr-fc{display:block;width:100%;border:0;background:transparent;padding:0;perspective:1200px;height:240px}
-body[data-page="treinamento"] .tr-fc-in{display:block;position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+body[data-page="treinamento"] .tr-fc-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin-bottom:16px;font-size:.85rem;color:var(--muted);font-weight:600}
+body[data-page="treinamento"] .tr-fc-meta .tr-bar{flex:1 1 120px;min-width:80px}
+body[data-page="treinamento"] .tr-fc-meta>span{white-space:nowrap}
+body[data-page="treinamento"] .tr-fc{display:block;width:100%;border:0;background:transparent;padding:0;perspective:1200px;height:auto;min-height:260px;cursor:pointer}
+body[data-page="treinamento"] .tr-fc-in{display:grid;position:relative;width:100%;min-height:inherit;transition:transform .5s;transform-style:preserve-3d}
 body[data-page="treinamento"] .tr-fc.flip .tr-fc-in{transform:rotateY(180deg)}
-body[data-page="treinamento"] .tr-fc .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px 30px;font-size:1.2rem;font-weight:700;line-height:1.45}
-body[data-page="treinamento"] .tr-fc .face small{position:absolute;top:14px;left:18px;font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;opacity:.7}
-body[data-page="treinamento"] .tr-fc .face em{position:absolute;bottom:14px;font-size:.75rem;font-style:normal;opacity:.6;font-weight:600}
+body[data-page="treinamento"] .tr-fc .face{grid-area:1/1;min-height:260px;box-sizing:border-box;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;text-align:center;padding:44px 24px 40px;font-size:1.15rem;font-weight:700;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
+body[data-page="treinamento"] .tr-fc .face .txt{display:block;min-width:0}
+body[data-page="treinamento"] .tr-fc .face small{position:absolute;top:14px;left:18px;right:18px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;opacity:.7}
+body[data-page="treinamento"] .tr-fc .face em{position:absolute;bottom:12px;left:18px;right:18px;font-size:.75rem;font-style:normal;opacity:.6;font-weight:600}
 body[data-page="treinamento"] .tr-fc .front{background:linear-gradient(135deg,var(--navy),var(--azul));color:#fff}
 body[data-page="treinamento"] .tr-fc .back{background:var(--card);color:var(--text);border:2px solid var(--verde);transform:rotateY(180deg)}
 body[data-page="treinamento"] .tr-center{text-align:center}
@@ -1029,7 +1033,7 @@ body[data-page="treinamento"] .tr-center big{font-size:3rem;display:block}
 
 /* simulador */
 body[data-page="treinamento"] .tr-chat{margin:6px 0 14px}
-body[data-page="treinamento"] .bubble{max-width:560px;border-radius:4px 18px 18px 18px;padding:12px 16px;background:var(--bg);border:1px solid var(--line);font-weight:600}
+body[data-page="treinamento"] .bubble{max-width:min(560px,100%);overflow-wrap:anywhere;word-break:break-word;line-height:1.5;border-radius:4px 18px 18px 18px;padding:12px 16px;background:var(--bg);border:1px solid var(--line);font-weight:600}
 body[data-page="treinamento"] .bubble small{display:block;font-size:.7rem;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em}
 body[data-page="treinamento"] .tr-chat-ask{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
 
@@ -1053,7 +1057,9 @@ body[data-page="treinamento"] .tr-soon ul{display:inline-block;text-align:left;m
 }
 @media(max-width:560px){
   body[data-page="treinamento"] .tr-lesson,body[data-page="treinamento"] .tr-card{padding:18px 16px}
-  body[data-page="treinamento"] .tr-fc{height:280px}
+  body[data-page="treinamento"] .tr-fc,body[data-page="treinamento"] .tr-fc .face{min-height:300px}
+  body[data-page="treinamento"] .tr-fc .face{font-size:1.05rem;padding:44px 16px 40px}
+  body[data-page="treinamento"] .tr-opt{padding:12px 12px}
   body[data-page="treinamento"] .tr-nav .btn{flex:1 1 100%}
 }
 @media(prefers-reduced-motion:reduce){body[data-page="treinamento"] .tr-fc-in{transition:none}}
@@ -1066,3 +1072,10 @@ body[data-page="treinamento"] .tr-soon ul{display:inline-block;text-align:left;m
   body[data-page="treinamento"] .tr-table td{border-top:0;padding:8px 14px}
   body[data-page="treinamento"] .tr-table td::before{content:attr(data-lab);display:block;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 }
+
+/* ---- Quiz/Treinamento: proteção contra sobreposição (texto longo, avatar do chatbot) ---- */
+body[data-page="treinamento"] .tr-card,body[data-page="treinamento"] .tr-lesson{overflow-wrap:anywhere;word-break:break-word}
+body[data-page="treinamento"] .tr-card .tr-alert{overflow-wrap:anywhere;line-height:1.5}
+body[data-page="treinamento"] .tr-actions{align-items:stretch;gap:10px}
+body[data-page="treinamento"] .tr-actions .btn{white-space:normal;text-align:center}
+@media(max-width:560px){body[data-page="treinamento"] .tr-actions .btn{flex:1 1 100%}}
