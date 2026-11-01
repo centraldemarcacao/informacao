@@ -16,12 +16,12 @@
     <div>
       <span class="eyebrow">🎓 Treinamento</span>
       <h1>Guia de Treinamento</h1>
-      <p>Aprenda os fluxos de cada área com lições, árvore de decisão, cartões de estudo, quiz e simulador de atendimento.</p>
+      <p>Capacitação sobre os fluxos assistenciais e administrativos de cada área, com lições, árvore de decisão, cartões de estudo, avaliação e simulador de atendimento.</p>
     </div>
     <div class="today-box">
       <small>Seu progresso</small>
       <strong id="heroProg">—</strong>
-      <span id="heroWho">Visitante: salvo só neste navegador</span>
+      <span id="heroWho">Visitante: progresso salvo apenas neste navegador</span>
     </div>
   </div>
 </section>
@@ -63,7 +63,7 @@ const ABAS = [
   { id: 'licoes',    ico: '📚', l: 'Lições',            show: m => m.licoes.length },
   { id: 'arvore',    ico: '🧭', l: 'Árvore de decisão', show: m => !!m.arvore },
   { id: 'cartoes',   ico: '🃏', l: 'Cartões',           show: m => m.cartoes.length },
-  { id: 'quiz',      ico: '📝', l: 'Quiz',              show: m => m.quiz.length },
+  { id: 'quiz',      ico: '📝', l: 'Avaliação',              show: m => m.quiz.length },
   { id: 'simulador', ico: '💬', l: 'Simulador',         show: m => m.simulador.length },
   { id: 'cola',      ico: '⚡', l: 'Consulta rápida',   show: m => m.cola.length }
 ];
@@ -116,7 +116,7 @@ function pintarTopo() {
   $('#heroProg').textContent = geral + '% concluído';
   $('#kpis').innerHTML =
     kpi('📚', st.feitas + '/' + st.total, 'Lições concluídas') +
-    kpi('📝', st.q ? st.q.melhor + '%' : '—', 'Melhor nota do quiz') +
+    kpi('📝', st.q ? st.q.melhor + '%' : '—', 'Melhor nota da avaliação') +
     kpi('💬', st.s ? st.s.melhor + '%' : '—', 'Melhor nota do simulador') +
     kpi('🏅', st.pct + '%', 'Progresso em ' + m.titulo);
 
@@ -204,14 +204,14 @@ function vLicoes(v, m) {
       </div>
     </article></div>`;
   v.onclick = e => {
-    const c = e.target.closest('[data-copy]'); if (c) return UI.copy(c.dataset.copy, 'Número copiado!');
+    const c = e.target.closest('[data-copy]'); if (c) return UI.copy(c.dataset.copy, 'Número copiado.');
     const l = e.target.closest('[data-l]');
     if (l) { licaoId = l.dataset.l; render(); return window.scrollTo({ top: $('#modHead').offsetTop - 10, behavior: 'smooth' }); }
     const nv = e.target.closest('[data-nav]');
     if (nv) { licaoId = m.licoes[i + Number(nv.dataset.nav)].id; render(); return window.scrollTo({ top: $('#modHead').offsetTop - 10, behavior: 'smooth' }); }
     if (e.target.closest('[data-done]')) {
       const k = m.id + '/' + L.id;
-      if (prog.licoes[k]) delete prog.licoes[k]; else { prog.licoes[k] = hoje(); UI.toast('Lição concluída!'); }
+      if (prog.licoes[k]) delete prog.licoes[k]; else { prog.licoes[k] = hoje(); UI.toast('Lição concluída.'); }
       salvar();
       if (prog.licoes[k] && i < m.licoes.length - 1) licaoId = m.licoes[i + 1].id;
       render();
@@ -225,7 +225,7 @@ function vArvore(v, m) {
   const A = m.arvore;
   if (!arv || arv.mod !== m.id) arv = { mod: m.id, cur: A.inicio, trilha: [], notas: [] };
   const no = A.nos[arv.cur];
-  let h = `<div class="tr-card"><div class="tr-card-head"><h3>🧭 O que orientar ao paciente?</h3><p>Responda as perguntas como se estivesse com o paciente na linha. A resposta traz a orientação certa.</p></div>`;
+  let h = `<div class="tr-card"><div class="tr-card-head"><h3>🧭 O que orientar ao paciente?</h3><p>Responda às perguntas considerando o atendimento ao paciente. Ao final, será apresentada a orientação institucional adequada.</p></div>`;
   if (arv.trilha.length) h += `<ol class="tr-trail">${arv.trilha.map(t => `<li><small>${esc(t.q)}</small><b>${esc(t.l)}</b></li>`).join('')}</ol>`;
   if (no.fim) {
     const passos = arv.notas.concat(no.passos);
@@ -250,7 +250,7 @@ function vArvore(v, m) {
     else if (a.dataset.act === 'back') { const t = arv.trilha.pop(); arv.cur = t.de; if (t.nota) arv.notas.pop(); }
     else if (a.dataset.act === 'copy') {
       const passos = arv.notas.concat(no.passos).map(p => '• ' + plain(p));
-      return UI.copy(plain(no.titulo) + '\n' + passos.join('\n'), 'Orientação copiada!');
+      return UI.copy(plain(no.titulo) + '\n' + passos.join('\n'), 'Orientação copiada.');
     }
     vArvore(v, m);
   };
@@ -263,20 +263,20 @@ function vCartoes(v, m) {
   const total = m.cartoes.length;
   if (!fc.fila.length) {
     if (!prog.cartoes[m.id]) { prog.cartoes[m.id] = hoje(); salvar(); }
-    v.innerHTML = `<div class="tr-card tr-center"><big>🎉</big><h3>Você passou por todos os cartões!</h3><p>${fc.sei} de ${total} marcados como "Sei".</p>
+    v.innerHTML = `<div class="tr-card tr-center"><big>🎉</big><h3>Revisão de todos os cartões concluída.</h3><p>${fc.sei} de ${total} marcados como "Dominado".</p>
       <div class="tr-actions c"><button class="btn" data-act="again">↺ Estudar de novo</button></div></div>`;
     v.onclick = e => { if (e.target.closest('[data-act]')) { fc = null; vCartoes(v, m); } };
     return;
   }
   const c = m.cartoes[fc.fila[0]];
-  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>🃏 Cartões de estudo</h3><p>Leia a frente, tente lembrar a resposta e vire o cartão.</p></div>
-    <div class="tr-fc-meta"><span>Sei: <b>${fc.sei}</b>/${total}</span><div class="tr-bar"><i style="width:${fc.sei / total * 100}%"></i></div><span>Restam <b>${fc.fila.length}</b></span></div>
+  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>🃏 Cartões de estudo</h3><p>Leia o enunciado, formule a resposta e, em seguida, verifique o verso do cartão.</p></div>
+    <div class="tr-fc-meta"><span>Dominados: <b>${fc.sei}</b>/${total}</span><div class="tr-bar"><i style="width:${fc.sei / total * 100}%"></i></div><span>Restam <b>${fc.fila.length}</b></span></div>
     <button type="button" class="tr-fc${fc.virado ? ' flip' : ''}" data-act="flip" aria-label="Virar cartão">
-      <span class="tr-fc-in"><span class="face front"><small>Pergunta</small>${fmt(c.f)}<em>Toque para virar</em></span><span class="face back"><small>Resposta</small>${fmt(c.v)}</span></span>
+      <span class="tr-fc-in"><span class="face front"><small>Pergunta</small><span class="txt">${fmt(c.f)}</span><em>Selecione para ver a resposta</em></span><span class="face back"><small>Resposta</small><span class="txt">${fmt(c.v)}</span></span></span>
     </button>
     <div class="tr-actions c">${fc.virado
-      ? '<button class="btn" data-act="rev">🔁 Revisar depois</button><button class="btn wa-btn" data-act="sei">✓ Sei</button>'
-      : '<button class="btn" data-act="flip">Virar cartão</button>'}
+      ? '<button class="btn" data-act="rev">🔁 Revisar posteriormente</button><button class="btn wa-btn" data-act="sei">✓ Dominado</button>'
+      : '<button class="btn" data-act="flip">Exibir resposta</button>'}
       <button class="btn ghost" data-act="mix">🔀 Embaralhar</button></div></div>`;
   v.onclick = e => {
     const a = e.target.closest('[data-act]'); if (!a) return;
@@ -297,8 +297,8 @@ function vSim(v, m) { motor(v, m, 'sim', m.simulador, true); }
 function motor(v, m, chave, itens, chat) {
   const id = chave + m.id;
   let S = qz[id];
-  const tit = chat ? '💬 Simulador de atendimento' : '📝 Quiz de situações reais';
-  const sub = chat ? 'O paciente manda uma mensagem. Escolha a melhor resposta.' : 'Escolha a alternativa correta. Você vê a explicação logo após responder.';
+  const tit = chat ? '💬 Simulador de atendimento' : '📝 Avaliação de conhecimentos';
+  const sub = chat ? 'O paciente envia uma mensagem. Selecione a resposta institucional mais adequada.' : 'Selecione a alternativa correta. A justificativa técnica é exibida após a resposta.';
 
   if (!S) {
     const base = shuffle(itens.map((_, i) => i));
@@ -313,9 +313,9 @@ function motor(v, m, chave, itens, chat) {
       S.rev = true; salvar();
     }
     v.innerHTML = `<div class="tr-card tr-center"><big>${aprovado ? '🏆' : '💪'}</big><h3>${S.acertos} de ${S.fila.length} (${pct}%)</h3>
-      <p>${aprovado ? 'Muito bem! Você está apto nesta etapa.' : `A nota mínima é ${MIN_OK}%. Revise as lições e tente de novo.`}</p>
-      <div class="tr-actions c">${S.erros.length ? '<button class="btn wa-btn" data-act="erros">Refazer só os erros</button>' : ''}
-      <button class="btn" data-act="again">↺ Refazer tudo</button></div></div>`;
+      <p>${aprovado ? 'Desempenho satisfatório. Colaborador apto nesta etapa.' : `A nota mínima de aprovação é ${MIN_OK}%. Recomenda-se revisar as lições e repetir a avaliação.`}</p>
+      <div class="tr-actions c">${S.erros.length ? '<button class="btn wa-btn" data-act="erros">Refazer apenas os itens incorretos</button>' : ''}
+      <button class="btn" data-act="again">↺ Refazer avaliação completa</button></div></div>`;
     v.onclick = e => {
       const a = e.target.closest('[data-act]'); if (!a) return;
       if (a.dataset.act === 'erros') { const f = S.erros.slice(); qz[id] = { fila: f, i: 0, acertos: 0, erros: [], resp: null, tot: f.length, rev: true }; }
@@ -338,7 +338,7 @@ function motor(v, m, chave, itens, chat) {
       if (respondido) { if (n === it.ok) cls += ' right'; else if (n === S.resp) cls += ' wrong'; else cls += ' dim'; }
       return `<button type="button" class="${cls}" data-o="${n}" ${respondido ? 'disabled' : ''}><span class="lt">${'ABCD'[k]}</span><span>${esc(it.op[n])}</span></button>`;
     }).join('')}</div>
-    ${respondido ? `<div class="tr-alert ${certa ? 'ok' : 'err'}"><b>${certa ? '✓ Correto!' : '✗ Não foi dessa vez.'}</b> ${esc(it.why)}</div>
+    ${respondido ? `<div class="tr-alert ${certa ? 'ok' : 'err'}"><b>${certa ? '✓ Resposta correta.' : '✗ Resposta incorreta.'}</b> ${esc(it.why)}</div>
       <div class="tr-actions"><button class="btn" data-act="next">${S.i === S.fila.length - 1 ? 'Ver resultado' : 'Próxima →'}</button></div>` : ''}</div>`;
   v.onclick = e => {
     const o = e.target.closest('[data-o]');
@@ -353,7 +353,7 @@ function motor(v, m, chave, itens, chat) {
 
 /* ===================== CONSULTA RÁPIDA ===================== */
 function vCola(v, m) {
-  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>⚡ Consulta rápida</h3><p>Use durante o atendimento. Busque por palavra (ex.: "urgência", "convênio", "iodo") e copie a resposta.</p></div>
+  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>⚡ Consulta rápida</h3><p>Consulta durante o atendimento. Pesquise por termo (ex.: "urgência", "convênio", "iodo") e copie a orientação.</p></div>
     <div class="search tr-search"><input type="search" id="cq" placeholder="Buscar..." autocomplete="off" aria-label="Buscar na consulta rápida"></div>
     <div class="tr-cola" id="colaL"></div></div>`;
   const lista = $('#colaL', v);
@@ -368,7 +368,7 @@ function vCola(v, m) {
     }).join('') : '<div class="nothing"><big>🔍</big>Nada encontrado.</div>';
   };
   $('#cq', v).addEventListener('input', UI.debounce(pintar, 100));
-  v.onclick = e => { const c = e.target.closest('[data-copy]'); if (c) UI.copy(c.dataset.copy, 'Resposta copiada!'); };
+  v.onclick = e => { const c = e.target.closest('[data-copy]'); if (c) UI.copy(c.dataset.copy, 'Orientação copiada.'); };
   pintar();
 }
 
@@ -384,11 +384,11 @@ Core.init({ allowCreate: false, onChange: st => {
   const quem = $('#heroWho');
   if (st.logado && Core.perfil) {
     prog = unir(Core.perfil.treino, prog);
-    quem.textContent = Core.nomeUser() + ': salvo na sua conta';
+    quem.textContent = Core.nomeUser() + ': progresso salvo na conta';
     salvar(); render();
   } else {
     prog = Object.assign(vazio(), UI.store.get(LS, {}));
-    quem.textContent = 'Visitante: salvo só neste navegador';
+    quem.textContent = 'Visitante: progresso salvo apenas neste navegador';
     render();
   }
 } });

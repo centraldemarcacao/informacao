@@ -89,7 +89,7 @@
   var root = el('div', 'lg-chat'); root.setAttribute('role', 'complementary'); root.setAttribute('aria-label', TITULO);
 
   var launch = el('div', 'lg-launch');
-  var dica = el('div', 'lg-dica', 'Dúvidas? Pergunte aqui');
+  var dica = el('div', 'lg-dica', 'Precisa de orientação? Consulte o assistente');
   var fab = el('button', 'lg-fab'); fab.type = 'button'; fab.setAttribute('aria-label', 'Abrir assistente de dúvidas'); fab.setAttribute('aria-expanded', 'false');
   if (AVATAR_NO_BOTAO && AVATAR) comImagem(fab, ICO.chat); else fab.innerHTML = ICO.chat;
   launch.appendChild(dica); launch.appendChild(fab);
@@ -111,10 +111,10 @@
 
   var msgs = el('div', 'lg-msgs'); msgs.setAttribute('aria-live', 'polite');
   var form = el('form', 'lg-form');
-  var ta = el('textarea'); ta.rows = 1; ta.maxLength = MAX_CHARS; ta.placeholder = 'Escreva sua dúvida'; ta.setAttribute('aria-label', 'Sua pergunta');
+  var ta = el('textarea'); ta.rows = 1; ta.maxLength = MAX_CHARS; ta.placeholder = 'Descreva sua dúvida de atendimento'; ta.setAttribute('aria-label', 'Sua pergunta');
   var send = el('button', 'lg-send'); send.type = 'submit'; send.setAttribute('aria-label', 'Enviar'); send.title = 'Enviar'; send.innerHTML = ICO.enviar;
   form.appendChild(ta); form.appendChild(send);
-  var foot = el('div', 'lg-foot', 'A IA pode errar. Não digite dados de pacientes (nome, CPF, exames).');
+  var foot = el('div', 'lg-foot', 'O assistente pode conter imprecisões; confirme informações críticas com a coordenação. Não informe dados de pacientes (nome, CPF, exames), em conformidade com a LGPD.');
 
   panel.appendChild(head); panel.appendChild(aviso); panel.appendChild(msgs); panel.appendChild(form); panel.appendChild(foot);
   root.appendChild(panel); root.appendChild(launch); document.body.appendChild(root);
@@ -140,7 +140,7 @@
   function boasVindas() {
     msgs.innerHTML = '';
     var l = linha('bot');
-    l.bolha.innerHTML = render('Olá! Sou o assistente de apoio da Central de Marcação.\nEscolha um assunto ou escreva sua dúvida de atendimento.');
+    l.bolha.innerHTML = render('Olá. Sou o assistente de apoio da Central de Marcação.\nSelecione um assunto ou descreva sua dúvida de atendimento.');
     var s = el('div', 'lg-sug');
     SUGESTOES.forEach(function (x) {
       if (typeof x === 'string') x = { ico: '💬', t: x, q: x, bg: '#e3f2fd' };
@@ -238,7 +238,7 @@
       lb.col.appendChild(el('span', 'lg-hora', h));
     }).catch(function (err) {
       historico.pop();   // remove a pergunta sem resposta, para o histórico continuar alternando
-      var msg = err.name === 'AbortError' ? 'A resposta demorou demais.' : (err.message || 'Não foi possível conectar.');
+      var msg = err.name === 'AbortError' ? 'O tempo de resposta foi excedido. Tente novamente.' : (err.message || 'Não foi possível conectar.');
       mostrarErro(lb, msg, function () { lb.row.remove(); lu.row.remove(); enviar(texto); });
     }).then(function () {
       clearTimeout(to); ocupado = false; send.disabled = false; msgs.setAttribute('aria-busy', 'false');
