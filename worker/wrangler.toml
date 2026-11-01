@@ -24,6 +24,7 @@ binding = "AI"
 # Guarda os vetores da busca por significado. Sem "id": o Wrangler cria o espaço sozinho no próximo `wrangler deploy`.
 [[kv_namespaces]]
 binding = "VETORES"
+id = "67277742e19f4733891ad4727b97ef95"
 
 # Para desligar só a busca por significado (continua a busca por palavras): BUSCA_SEMANTICA = "off" em [vars]
 
