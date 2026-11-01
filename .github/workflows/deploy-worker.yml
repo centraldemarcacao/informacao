@@ -1,0 +1,33 @@
+name: Publicar assistente (Cloudflare Worker)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'treinamento.js'
+      - 'worker/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:        # botão "Run workflow" na aba Actions
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Lê o treinamento.js do site e gera a base de conhecimento do assistente
+      - name: Gerar base do treinamento
+        working-directory: worker
+        run: node scripts/build-treinamento.mjs
+
+      - name: Publicar na Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          wranglerVersion: "4"      # o limite por IP do wrangler.toml exige wrangler 4.36 ou mais novo
