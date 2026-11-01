@@ -37,6 +37,7 @@
 <script src="shell.js"></script>
 <script src="mensagens.js?v=20261016"></script>
 <script src="core.js"></script>
+<script src="treinamento.js"></script>
 <script src="triagem.js"></script>
 <script>
 /* =====================================================================
@@ -126,9 +127,10 @@ const CARDS = [
   { k: 'backup',    ico: '💾', t: 'Backup',    d: 'Salvar e importar anotações',       c: '#00838f' },
   { k: 'usuarios',  ico: '👥', t: 'Usuários',  d: 'Contas e senha temporária',         c: '#6a1b9a', gestao: true },
   { k: 'avisos',    ico: '📢', t: 'Avisos',    d: 'Avisar quem está logado', c: '#c2185b', gestao: true },
+  { k: 'treino',    ico: '🎓', t: 'Treinamento', d: 'Progresso da equipe', c: '#6a1b9a', gestao: true },
   { k: 'triagem',   ico: '🩺', t: 'Triagem',   d: 'Solicitações e status',   c: '#00897b', triagem: true }
 ];
-const FN = { perfil: tabPerfil, mensagens: tabMensagens, senha: tabSenha, backup: tabBackup, usuarios: tabUsuarios, avisos: tabAvisos, triagem: tabTriagem };
+const FN = { perfil: tabPerfil, mensagens: tabMensagens, senha: tabSenha, backup: tabBackup, usuarios: tabUsuarios, avisos: tabAvisos, treino: tabTreino, triagem: tabTriagem };
 const cardsVisiveis = () => CARDS.filter(c => c.triagem ? Core.temTriagem() : (!c.gestao || Core.isGestao()));
 
 function montarPainel(){
@@ -423,6 +425,32 @@ async function tabAvisos(box){
     try { await B().sendAviso(t); UI.toast('Aviso enviado'); tabAvisos(box); }
     catch (e) { showMsg(msg, 'err', erroMsg(e)); }
   };
+}
+
+/* =============== Treinamento — progresso da equipe (gestão) =============== */
+async function tabTreino(box){
+  box.innerHTML = '<div class="au-empty">Carregando…</div>';
+  let us;
+  try { us = await B().listUsers(Core.perfil.papel); }
+  catch (e) { box.innerHTML = `<div class="au-msg err show">${esc(erroMsg(e))}</div>`; return; }
+  if (!Core.isAdmin()) us = us.filter(u => u.papel !== 'admin');
+  const mods = Object.values(TREINO).filter(m => m.pronto);
+  const MIN = 70;
+  const linha = u => {
+    const t = u.treino || {};
+    const cel = m => {
+      const f = m.licoes.filter(l => (t.licoes || {})[m.id + '/' + l.id]).length;
+      const qz = (t.quiz || {})[m.id], si = (t.sim || {})[m.id];
+      const ok = f === m.licoes.length && qz && qz.melhor >= MIN && si && si.melhor >= MIN;
+      return `<td>${ok ? '🏅 ' : ''}Lições ${f}/${m.licoes.length}<br><small>Quiz ${qz ? qz.melhor + '%' : '—'} · Simulador ${si ? si.melhor + '%' : '—'}</small></td>`;
+    };
+    return `<tr><td><b>${esc(Core.usuarioDe(u))}</b>${u.nome ? '<br><small>' + esc(u.nome) + '</small>' : ''}</td>${mods.map(cel).join('')}</tr>`;
+  };
+  us.sort((a, b) => Core.usuarioDe(a).localeCompare(Core.usuarioDe(b)));
+  box.innerHTML = `<p class="au-sub u05">Progresso de quem entrou com usuário. 🏅 = todas as lições concluídas e quiz e simulador com nota de pelo menos ${MIN}%. Visitantes sem conta não aparecem aqui.</p>
+    <div style="overflow-x:auto"><table class="tr-table" style="width:100%;border-collapse:collapse;font-size:.88rem">
+      <thead><tr><th style="text-align:left;padding:8px">Usuário</th>${mods.map(m => `<th style="text-align:left;padding:8px">${m.ico} ${esc(m.titulo)}</th>`).join('')}</tr></thead>
+      <tbody>${us.map(linha).join('').replace(/<td>/g, '<td style="padding:8px;border-top:1px solid var(--line);vertical-align:top">') || '<tr><td>Nenhum usuário.</td></tr>'}</tbody></table></div>`;
 }
 
 /* =============== Triagem — gestão =============== */

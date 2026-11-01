@@ -12,6 +12,7 @@
     { id: 'quimioterapia',    href: 'quimioterapia.html',    label: 'Quimioterapia',     ico: '💉' },
     { id: 'radioterapia',     href: 'radioterapia.html',     label: 'Radioterapia',      ico: '☢️' },          
     { id: 'ultrassonografia', href: 'ultrassonografia.html', label: 'Ultrassonografia',  ico: '📺' },
+    { id: 'treinamento',      href: 'treinamento.html',      label: 'Treinamento',       ico: '🎓' },
     { id: 'anotacoes',        href: 'anotacoes.html',        label: 'Anotações',         ico: '📋' },
     { id: 'telefonia',        href: 'telefonia.html',        label: 'Telefonia',         ico: '☎️' },
     { id: 'triagem',          href: 'triagem.html',          label: 'Triagem',           ico: '🩺' },     

@@ -21,7 +21,7 @@
   var MAX_CHARS = 1500;        // mesmo limite do Worker
   var TIMEOUT_MS = 60000;
   var DICA_VOLTA_MS = 60000;   // quanto tempo depois de clicado o balão "Dúvidas? Pergunte aqui" reaparece (60 s)
-  var PAGINAS = ['index', 'oncologia', 'quimioterapia', 'radioterapia', 'ultrassonografia', 'anotacoes', 'telefonia', 'triagem'];
+  var PAGINAS = ['index', 'oncologia', 'quimioterapia', 'radioterapia', 'ultrassonografia', 'anotacoes', 'telefonia', 'triagem', 'treinamento'];
 
   /* ATALHOS da tela inicial. Edite à vontade: ico (emoji), t (título curto), q (pergunta enviada), bg (cor do quadradinho).
      Também aceita só textos: ['Pergunta 1', 'Pergunta 2']. Use de 2 a 4. */

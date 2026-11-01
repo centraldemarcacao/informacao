@@ -8,7 +8,10 @@ import { fileURLToPath } from 'node:url';
 const entrada = process.env.TREINAMENTO_JS || fileURLToPath(new URL('../../treinamento.js', import.meta.url));
 const saida = fileURLToPath(new URL('../src/treinamento-base.js', import.meta.url));
 
-const TREINO = vm.runInNewContext(readFileSync(entrada, 'utf8') + '\n;TREINO', {});
+let codigo;
+try { codigo = readFileSync(entrada, 'utf8'); }
+catch { console.error(`ERRO: não encontrei ${entrada}\nEnvie o treinamento.js para a RAIZ do repositório (ao lado de index.html).`); process.exit(1); }
+const TREINO = vm.runInNewContext(codigo + '\n;TREINO', {});
 const limpa = (s) => String(s).replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
 
 function blocoTexto(b) {

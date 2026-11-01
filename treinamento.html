@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<script>try{if(localStorage.getItem('an_tema')==='dark')document.documentElement.setAttribute('data-tema','dark')}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Treinamento • Central de Marcação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="treinamento">
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="eyebrow">🎓 Treinamento</span>
+      <h1>Guia de Treinamento</h1>
+      <p>Aprenda os fluxos de cada área com lições, árvore de decisão, cartões de estudo, quiz e simulador de atendimento.</p>
+    </div>
+    <div class="today-box">
+      <small>Seu progresso</small>
+      <strong id="heroProg">—</strong>
+      <span id="heroWho">Visitante: salvo só neste navegador</span>
+    </div>
+  </div>
+</section>
+
+<main class="wrap" id="conteudo">
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="tr-mods" id="mods" role="tablist" aria-label="Áreas de treinamento"></div>
+
+  <div id="modHead"></div>
+
+  <div class="tr-tabs" id="tabs" role="tablist" aria-label="Formas de estudar"></div>
+
+  <div id="view" role="tabpanel"></div>
+
+</main>
+
+<script src="shell.js"></script>
+<script src="core.js"></script>
+<script src="treinamento.js"></script>
+<script>
+(function () {
+'use strict';
+
+const esc = UI.esc;
+const $ = (s, r) => (r || document).querySelector(s);
+const MIN_OK = 70;   /* nota mínima (%) para considerar quiz/simulador aprovado */
+
+/* ===================== texto: **negrito** ===================== */
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const plain = s => String(s).replace(/\*\*/g, '');
+const digits = t => String(t).replace(/\D/g, '');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hoje = () => new Date().toLocaleDateString('pt-BR');
+
+/* ===================== abas ===================== */
+const ABAS = [
+  { id: 'licoes',    ico: '📚', l: 'Lições',            show: m => m.licoes.length },
+  { id: 'arvore',    ico: '🧭', l: 'Árvore de decisão', show: m => !!m.arvore },
+  { id: 'cartoes',   ico: '🃏', l: 'Cartões',           show: m => m.cartoes.length },
+  { id: 'quiz',      ico: '📝', l: 'Quiz',              show: m => m.quiz.length },
+  { id: 'simulador', ico: '💬', l: 'Simulador',         show: m => m.simulador.length },
+  { id: 'cola',      ico: '⚡', l: 'Consulta rápida',   show: m => m.cola.length }
+];
+
+/* ===================== progresso ===================== */
+/* prog = { licoes: {'mod/id': 'dd/mm/aaaa'}, quiz: {mod: {melhor, tent, data}}, sim: {...}, cartoes: {mod: 'data'} }
+   Visitante: fica só neste navegador. Quem entrou: também vai para o perfil (campo "treino"). */
+const LS = 'tr_prog';
+const vazio = () => ({ licoes: {}, quiz: {}, sim: {}, cartoes: {} });
+let prog = Object.assign(vazio(), UI.store.get(LS, {}));
+
+function unir(a, b) {
+  const r = Object.assign(vazio(), JSON.parse(JSON.stringify(a || {})));
+  b = b || {};
+  Object.assign(r.licoes, b.licoes || {}, r.licoes);
+  Object.assign(r.cartoes, b.cartoes || {}, r.cartoes);
+  ['quiz', 'sim'].forEach(k => Object.keys(b[k] || {}).forEach(m => {
+    const x = r[k][m], y = b[k][m];
+    if (!x || (y.melhor || 0) > (x.melhor || 0)) r[k][m] = Object.assign({}, y, x ? { tent: Math.max(x.tent || 0, y.tent || 0) } : {});
+  }));
+  return r;
+}
+function salvar() {
+  UI.store.set(LS, prog);
+  if (window.Core && Core.perfil) Core.salvarPerfil({ treino: prog });
+  pintarTopo();
+}
+
+function stats(m) {
+  const feitas = m.licoes.filter(l => prog.licoes[m.id + '/' + l.id]).length;
+  const q = prog.quiz[m.id], s = prog.sim[m.id];
+  const total = m.licoes.length + (m.quiz.length ? 1 : 0) + (m.simulador.length ? 1 : 0);
+  const ok = feitas + (q && q.melhor >= MIN_OK ? 1 : 0) + (s && s.melhor >= MIN_OK ? 1 : 0);
+  return { feitas, total: m.licoes.length, q, s, pct: total ? Math.round(ok / total * 100) : 0 };
+}
+
+/* ===================== estado da tela ===================== */
+const mods = Object.values(TREINO);
+let modId = (mods.find(m => m.pronto) || mods[0]).id;
+let aba = 'licoes';
+let licaoId = null;
+const mod = () => TREINO[modId];
+
+/* ===================== topo: KPIs, módulos, cabeçalho, abas ===================== */
+function pintarTopo() {
+  const m = mod(), st = stats(m);
+  const prontos = mods.filter(x => x.pronto).length;
+  const ger = mods.filter(x => x.pronto).map(x => stats(x).pct);
+  const geral = ger.length ? Math.round(ger.reduce((a, b) => a + b, 0) / ger.length) : 0;
+  $('#heroProg').textContent = geral + '% concluído';
+  $('#kpis').innerHTML =
+    kpi('📚', st.feitas + '/' + st.total, 'Lições concluídas') +
+    kpi('📝', st.q ? st.q.melhor + '%' : '—', 'Melhor nota do quiz') +
+    kpi('💬', st.s ? st.s.melhor + '%' : '—', 'Melhor nota do simulador') +
+    kpi('🏅', st.pct + '%', 'Progresso em ' + m.titulo);
+
+  $('#mods').innerHTML = mods.map(x => {
+    const p = x.pronto ? stats(x).pct + '%' : 'Em breve';
+    return `<button type="button" class="chip${x.id === modId ? ' active' : ''}" data-m="${x.id}" role="tab" aria-selected="${x.id === modId}" style="--c:${x.cor}"><i></i>${x.ico} ${esc(x.titulo)} <em>${p}</em></button>`;
+  }).join('');
+
+  const conc = m.pronto && st.pct === 100;
+  $('#modHead').innerHTML = `<div class="tr-head" style="--c:${m.cor}">
+      <div class="tr-head-ico">${m.ico}</div>
+      <div class="tr-head-txt"><h2>${esc(m.titulo)}${conc ? ' <span class="tr-badge">🏅 Módulo concluído</span>' : ''}${m.pronto ? '' : ' <span class="tr-badge soon">🔜 Em breve</span>'}</h2><p>${esc(m.resumo)}</p></div>
+      ${m.pronto ? `<div class="tr-prog" title="${st.pct}% do módulo"><div><i style="width:${st.pct}%"></i></div><b>${st.pct}%</b></div>` : ''}
+    </div>`;
+
+  const visiveis = ABAS.filter(a => a.show(m));
+  $('#tabs').classList.toggle('hidden', !visiveis.length);
+  $('#tabs').innerHTML = visiveis.map(a => `<button type="button" role="tab" class="${a.id === aba ? 'active' : ''}" data-a="${a.id}" aria-selected="${a.id === aba}">${a.ico} ${a.l}</button>`).join('');
+}
+const kpi = (ico, val, lab) => `<div class="kpi"><div class="kpi-ico">${ico}</div><div><b>${esc(val)}</b><span>${esc(lab)}</span></div></div>`;
+
+$('#mods').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  modId = b.dataset.m; aba = 'licoes'; licaoId = null; render();
+});
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  aba = b.dataset.a; render();
+});
+
+function render() {
+  const m = mod();
+  try { history.replaceState(null, '', '#' + modId + (m.pronto ? '/' + aba : '')); } catch (x) {}
+  pintarTopo();
+  const v = $('#view');
+  if (!m.pronto) { v.innerHTML = emBreve(m); return; }
+  if (!ABAS.find(a => a.id === aba && a.show(m))) aba = 'licoes';
+  ({ licoes: vLicoes, arvore: vArvore, cartoes: vCartoes, quiz: vQuiz, simulador: vSim, cola: vCola })[aba](v, m);
+}
+
+function emBreve(m) {
+  return `<div class="tr-soon"><big>🔜</big><h3>${esc(m.titulo)} está a caminho</h3>
+    <p>Este módulo seguirá o mesmo padrão da Radioterapia:</p>
+    <ul><li>📚 Lições na ordem do atendimento</li><li>🧭 Árvore de decisão</li><li>🃏 Cartões de estudo</li><li>📝 Quiz e 💬 simulador de atendimento</li><li>⚡ Consulta rápida durante o atendimento</li></ul></div>`;
+}
+
+/* ===================== LIÇÕES ===================== */
+function bloco(b) {
+  switch (b.t) {
+    case 'p': return `<p>${fmt(b.x)}</p>`;
+    case 'lista': return `<ul class="tr-ul">${b.itens.map(i => `<li>${fmt(i)}</li>`).join('')}</ul>`;
+    case 'passos': return `<ol class="tr-steps">${b.itens.map((i, n) => `<li><span class="n">${n + 1}</span><div><b>${esc(i.t)}</b><p>${fmt(i.x)}</p></div></li>`).join('')}</ol>`;
+    case 'tabela': return `<div class="tr-tw"><table class="tr-table"><thead><tr>${b.cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${b.linhas.map(l => `<tr>${l.map((c, i) => `<td data-lab="${esc(b.cab[i])}">${fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    case 'alerta': return `<div class="tr-alert ${b.tipo || 'info'}">${fmt(b.x)}</div>`;
+    case 'contato': {
+      const d = digits(b.tel), wa = b.via === 'whatsapp';
+      return `<div class="tr-contact"><div class="tc-ico">${wa ? '💬' : '📞'}</div><div class="tc-txt"><b>${esc(b.nome)}</b><span>${esc(b.tel)}${b.obs ? ' · ' + esc(b.obs) : ''}</span></div>
+        <a class="btn ${wa ? 'wa-btn' : ''}" href="${wa ? 'https://wa.me/55' + d : 'tel:+55' + d}"${wa ? ' target="_blank" rel="noopener"' : ''}>${wa ? 'WhatsApp' : 'Ligar'}</a>
+        <button class="btn ghost" type="button" data-copy="${esc(b.tel)}">Copiar</button></div>`;
+    }
+  }
+  return '';
+}
+
+function vLicoes(v, m) {
+  if (!licaoId || !m.licoes.find(l => l.id === licaoId)) {
+    const prox = m.licoes.find(l => !prog.licoes[m.id + '/' + l.id]);
+    licaoId = (prox || m.licoes[0]).id;
+  }
+  const i = m.licoes.findIndex(l => l.id === licaoId), L = m.licoes[i];
+  const feita = prog.licoes[m.id + '/' + L.id];
+  v.innerHTML = `<div class="tr-split">
+    <nav class="tr-list" aria-label="Lições">${m.licoes.map((l, n) => {
+      const ok = prog.licoes[m.id + '/' + l.id];
+      return `<button type="button" data-l="${l.id}" class="${l.id === L.id ? 'active' : ''}${ok ? ' done' : ''}"><span class="n">${ok ? '✓' : n + 1}</span><span class="t">${l.ico} ${esc(l.titulo)}<small>${l.min} min</small></span></button>`;
+    }).join('')}</nav>
+    <article class="tr-lesson">
+      <div class="tr-lesson-head"><span class="tr-step">Lição ${i + 1} de ${m.licoes.length} · ${L.min} min</span><h3>${L.ico} ${esc(L.titulo)}</h3><p>${esc(L.resumo)}</p></div>
+      ${L.blocos.map(bloco).join('')}
+      <div class="tr-keys"><b>🎯 Pontos-chave</b><ul>${L.chaves.map(c => `<li>${fmt(c)}</li>`).join('')}</ul></div>
+      <div class="tr-nav">
+        <button class="btn ghost" type="button" data-nav="-1" ${i === 0 ? 'disabled' : ''}>← Anterior</button>
+        <button class="btn ${feita ? 'ghost' : 'wa-btn'}" type="button" data-done="1">${feita ? '✓ Concluída em ' + esc(feita) + ' (desmarcar)' : '✓ Marcar como concluída'}</button>
+        <button class="btn" type="button" data-nav="1" ${i === m.licoes.length - 1 ? 'disabled' : ''}>Próxima →</button>
+      </div>
+    </article></div>`;
+  v.onclick = e => {
+    const c = e.target.closest('[data-copy]'); if (c) return UI.copy(c.dataset.copy, 'Número copiado!');
+    const l = e.target.closest('[data-l]');
+    if (l) { licaoId = l.dataset.l; render(); return window.scrollTo({ top: $('#modHead').offsetTop - 10, behavior: 'smooth' }); }
+    const nv = e.target.closest('[data-nav]');
+    if (nv) { licaoId = m.licoes[i + Number(nv.dataset.nav)].id; render(); return window.scrollTo({ top: $('#modHead').offsetTop - 10, behavior: 'smooth' }); }
+    if (e.target.closest('[data-done]')) {
+      const k = m.id + '/' + L.id;
+      if (prog.licoes[k]) delete prog.licoes[k]; else { prog.licoes[k] = hoje(); UI.toast('Lição concluída!'); }
+      salvar();
+      if (prog.licoes[k] && i < m.licoes.length - 1) licaoId = m.licoes[i + 1].id;
+      render();
+    }
+  };
+}
+
+/* ===================== ÁRVORE DE DECISÃO ===================== */
+let arv = null;
+function vArvore(v, m) {
+  const A = m.arvore;
+  if (!arv || arv.mod !== m.id) arv = { mod: m.id, cur: A.inicio, trilha: [], notas: [] };
+  const no = A.nos[arv.cur];
+  let h = `<div class="tr-card"><div class="tr-card-head"><h3>🧭 O que orientar ao paciente?</h3><p>Responda as perguntas como se estivesse com o paciente na linha. A resposta traz a orientação certa.</p></div>`;
+  if (arv.trilha.length) h += `<ol class="tr-trail">${arv.trilha.map(t => `<li><small>${esc(t.q)}</small><b>${esc(t.l)}</b></li>`).join('')}</ol>`;
+  if (no.fim) {
+    const passos = arv.notas.concat(no.passos);
+    h += `<div class="tr-result ${no.tipo}"><span class="tr-result-tag">Orientação</span><h4>${esc(no.titulo)}</h4>
+      <ul>${passos.map(p => `<li>${fmt(p)}</li>`).join('')}</ul></div>
+      <div class="tr-actions"><button class="btn ghost" data-act="back">← Voltar</button><button class="btn" data-act="reset">↺ Recomeçar</button><button class="btn ghost" data-act="copy">📋 Copiar orientação</button></div>`;
+  } else {
+    h += `<div class="tr-q"><h4>${esc(no.q)}</h4><div class="tr-opts">${no.opcoes.map((o, n) => `<button type="button" class="tr-opt" data-o="${n}">${esc(o.l)}</button>`).join('')}</div></div>
+      ${arv.trilha.length ? '<div class="tr-actions"><button class="btn ghost" data-act="back">← Voltar</button><button class="btn ghost" data-act="reset">↺ Recomeçar</button></div>' : ''}`;
+  }
+  v.innerHTML = h + '</div>';
+  v.onclick = e => {
+    const o = e.target.closest('[data-o]');
+    if (o) {
+      const op = no.opcoes[Number(o.dataset.o)];
+      arv.trilha.push({ q: no.q, l: op.l, de: arv.cur, nota: op.add || '' });
+      if (op.add) arv.notas.push(op.add);
+      arv.cur = op.prox; return vArvore(v, m);
+    }
+    const a = e.target.closest('[data-act]'); if (!a) return;
+    if (a.dataset.act === 'reset') arv = null;
+    else if (a.dataset.act === 'back') { const t = arv.trilha.pop(); arv.cur = t.de; if (t.nota) arv.notas.pop(); }
+    else if (a.dataset.act === 'copy') {
+      const passos = arv.notas.concat(no.passos).map(p => '• ' + plain(p));
+      return UI.copy(plain(no.titulo) + '\n' + passos.join('\n'), 'Orientação copiada!');
+    }
+    vArvore(v, m);
+  };
+}
+
+/* ===================== CARTÕES (flashcards) ===================== */
+let fc = null;
+function vCartoes(v, m) {
+  if (!fc || fc.mod !== m.id) fc = { mod: m.id, fila: shuffle(m.cartoes.map((_, i) => i)), sei: 0, virado: false };
+  const total = m.cartoes.length;
+  if (!fc.fila.length) {
+    if (!prog.cartoes[m.id]) { prog.cartoes[m.id] = hoje(); salvar(); }
+    v.innerHTML = `<div class="tr-card tr-center"><big>🎉</big><h3>Você passou por todos os cartões!</h3><p>${fc.sei} de ${total} marcados como "Sei".</p>
+      <div class="tr-actions c"><button class="btn" data-act="again">↺ Estudar de novo</button></div></div>`;
+    v.onclick = e => { if (e.target.closest('[data-act]')) { fc = null; vCartoes(v, m); } };
+    return;
+  }
+  const c = m.cartoes[fc.fila[0]];
+  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>🃏 Cartões de estudo</h3><p>Leia a frente, tente lembrar a resposta e vire o cartão.</p></div>
+    <div class="tr-fc-meta"><span>Sei: <b>${fc.sei}</b>/${total}</span><div class="tr-bar"><i style="width:${fc.sei / total * 100}%"></i></div><span>Restam <b>${fc.fila.length}</b></span></div>
+    <button type="button" class="tr-fc${fc.virado ? ' flip' : ''}" data-act="flip" aria-label="Virar cartão">
+      <span class="tr-fc-in"><span class="face front"><small>Pergunta</small>${fmt(c.f)}<em>Toque para virar</em></span><span class="face back"><small>Resposta</small>${fmt(c.v)}</span></span>
+    </button>
+    <div class="tr-actions c">${fc.virado
+      ? '<button class="btn" data-act="rev">🔁 Revisar depois</button><button class="btn wa-btn" data-act="sei">✓ Sei</button>'
+      : '<button class="btn" data-act="flip">Virar cartão</button>'}
+      <button class="btn ghost" data-act="mix">🔀 Embaralhar</button></div></div>`;
+  v.onclick = e => {
+    const a = e.target.closest('[data-act]'); if (!a) return;
+    const k = a.dataset.act;
+    if (k === 'flip') fc.virado = !fc.virado;
+    else if (k === 'sei') { fc.fila.shift(); fc.sei++; fc.virado = false; }
+    else if (k === 'rev') { fc.fila.push(fc.fila.shift()); fc.virado = false; }
+    else if (k === 'mix') { fc.fila = shuffle(fc.fila); fc.virado = false; }
+    vCartoes(v, m);
+  };
+}
+
+/* ===================== QUIZ e SIMULADOR (mesmo motor) ===================== */
+const qz = {};
+function vQuiz(v, m) { motor(v, m, 'quiz', m.quiz, false); }
+function vSim(v, m) { motor(v, m, 'sim', m.simulador, true); }
+
+function motor(v, m, chave, itens, chat) {
+  const id = chave + m.id;
+  let S = qz[id];
+  const tit = chat ? '💬 Simulador de atendimento' : '📝 Quiz de situações reais';
+  const sub = chat ? 'O paciente manda uma mensagem. Escolha a melhor resposta.' : 'Escolha a alternativa correta. Você vê a explicação logo após responder.';
+
+  if (!S) {
+    const base = shuffle(itens.map((_, i) => i));
+    S = qz[id] = { fila: base, i: 0, acertos: 0, erros: [], resp: null, tot: base.length, rev: false };
+  }
+  /* fim */
+  if (S.i >= S.fila.length) {
+    const pct = Math.round(S.acertos / S.fila.length * 100), aprovado = pct >= MIN_OK;
+    if (!S.rev) {
+      const a = prog[chave][m.id] || {};
+      prog[chave][m.id] = { melhor: Math.max(a.melhor || 0, pct), tent: (a.tent || 0) + 1, data: hoje() };
+      S.rev = true; salvar();
+    }
+    v.innerHTML = `<div class="tr-card tr-center"><big>${aprovado ? '🏆' : '💪'}</big><h3>${S.acertos} de ${S.fila.length} (${pct}%)</h3>
+      <p>${aprovado ? 'Muito bem! Você está apto nesta etapa.' : `A nota mínima é ${MIN_OK}%. Revise as lições e tente de novo.`}</p>
+      <div class="tr-actions c">${S.erros.length ? '<button class="btn wa-btn" data-act="erros">Refazer só os erros</button>' : ''}
+      <button class="btn" data-act="again">↺ Refazer tudo</button></div></div>`;
+    v.onclick = e => {
+      const a = e.target.closest('[data-act]'); if (!a) return;
+      if (a.dataset.act === 'erros') { const f = S.erros.slice(); qz[id] = { fila: f, i: 0, acertos: 0, erros: [], resp: null, tot: f.length, rev: true }; }
+      else delete qz[id];
+      motor(v, m, chave, itens, chat);
+    };
+    return;
+  }
+
+  const it = itens[S.fila[S.i]];
+  if (!S.ord || S.ordPara !== S.i) { S.ord = shuffle(it.op.map((_, n) => n)); S.ordPara = S.i; }
+  const respondido = S.resp !== null;
+  const certa = respondido && S.resp === it.ok;
+  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>${tit}</h3><p>${sub}</p></div>
+    <div class="tr-fc-meta"><span>Pergunta <b>${S.i + 1}</b>/${S.fila.length}</span><div class="tr-bar"><i style="width:${S.i / S.fila.length * 100}%"></i></div><span>Acertos <b>${S.acertos}</b></span></div>
+    ${chat ? `<div class="tr-chat"><div class="bubble pac"><small>👤 Paciente</small>${esc(it.msg)}</div></div><div class="tr-chat-ask">Sua resposta:</div>`
+           : `<div class="tr-q"><h4>${fmt(it.q)}</h4></div>`}
+    <div class="tr-opts">${S.ord.map((n, k) => {
+      let cls = 'tr-opt';
+      if (respondido) { if (n === it.ok) cls += ' right'; else if (n === S.resp) cls += ' wrong'; else cls += ' dim'; }
+      return `<button type="button" class="${cls}" data-o="${n}" ${respondido ? 'disabled' : ''}><span class="lt">${'ABCD'[k]}</span><span>${esc(it.op[n])}</span></button>`;
+    }).join('')}</div>
+    ${respondido ? `<div class="tr-alert ${certa ? 'ok' : 'err'}"><b>${certa ? '✓ Correto!' : '✗ Não foi dessa vez.'}</b> ${esc(it.why)}</div>
+      <div class="tr-actions"><button class="btn" data-act="next">${S.i === S.fila.length - 1 ? 'Ver resultado' : 'Próxima →'}</button></div>` : ''}</div>`;
+  v.onclick = e => {
+    const o = e.target.closest('[data-o]');
+    if (o && !respondido) {
+      S.resp = Number(o.dataset.o);
+      if (S.resp === it.ok) S.acertos++; else S.erros.push(S.fila[S.i]);
+      return motor(v, m, chave, itens, chat);
+    }
+    if (e.target.closest('[data-act="next"]')) { S.i++; S.resp = null; motor(v, m, chave, itens, chat); }
+  };
+}
+
+/* ===================== CONSULTA RÁPIDA ===================== */
+function vCola(v, m) {
+  v.innerHTML = `<div class="tr-card"><div class="tr-card-head"><h3>⚡ Consulta rápida</h3><p>Use durante o atendimento. Busque por palavra (ex.: "urgência", "convênio", "iodo") e copie a resposta.</p></div>
+    <div class="search tr-search"><input type="search" id="cq" placeholder="Buscar..." autocomplete="off" aria-label="Buscar na consulta rápida"></div>
+    <div class="tr-cola" id="colaL"></div></div>`;
+  const lista = $('#colaL', v);
+  const pintar = () => {
+    const t = UI.norm($('#cq', v).value.trim());
+    const r = m.cola.filter(c => !t || UI.norm(c.t + ' ' + c.r + ' ' + (c.tags || '')).includes(t));
+    lista.innerHTML = r.length ? r.map(c => {
+      const wa = c.via === 'whatsapp', d = c.tel ? digits(c.tel) : '';
+      return `<div class="tr-cola-i"><div><b>${esc(c.t)}</b><p>${fmt(c.r)}</p></div><div class="tr-cola-b">
+        ${c.tel ? `<a class="btn ${wa ? 'wa-btn' : ''}" href="${wa ? 'https://wa.me/55' + d : 'tel:+55' + d}"${wa ? ' target="_blank" rel="noopener"' : ''}>${wa ? 'WhatsApp' : 'Ligar'}</a>` : ''}
+        <button class="btn ghost" type="button" data-copy="${esc(plain(c.t) + ': ' + plain(c.r))}">Copiar</button></div></div>`;
+    }).join('') : '<div class="nothing"><big>🔍</big>Nada encontrado.</div>';
+  };
+  $('#cq', v).addEventListener('input', UI.debounce(pintar, 100));
+  v.onclick = e => { const c = e.target.closest('[data-copy]'); if (c) UI.copy(c.dataset.copy, 'Resposta copiada!'); };
+  pintar();
+}
+
+/* ===================== início ===================== */
+(function lerHash() {
+  const [mm, aa] = location.hash.replace('#', '').split('/');
+  if (TREINO[mm]) { modId = mm; if (aa && ABAS.find(a => a.id === aa)) aba = aa; }
+})();
+render();
+
+/* Quem entrou: junta o progresso do navegador com o da conta e passa a gravar na conta */
+Core.init({ allowCreate: false, onChange: st => {
+  const quem = $('#heroWho');
+  if (st.logado && Core.perfil) {
+    prog = unir(Core.perfil.treino, prog);
+    quem.textContent = Core.nomeUser() + ': salvo na sua conta';
+    salvar(); render();
+  } else {
+    prog = Object.assign(vazio(), UI.store.get(LS, {}));
+    quem.textContent = 'Visitante: salvo só neste navegador';
+    render();
+  }
+} });
+})();
+</script>
+</body>
+</html>

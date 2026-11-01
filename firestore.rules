@@ -117,7 +117,8 @@ service cloud.firestore {
       allow update:
         // o próprio usuário: só preferências (nunca papel/ativo)
         if (logado() && pid() == uid && ativo()
-            && mudou().hasOnly(['nome','tema','favoritos','usos','ordem','senhaTemp','email'])
+            && mudou().hasOnly(['nome','tema','favoritos','usos','ordem','senhaTemp','email','treino'])
+            && request.resource.data.get('treino', {}) is map
             && request.resource.data.get('email', '') is string
             && request.resource.data.get('email', '').size() <= 120)
         // conta antiga: grava o campo "usuario" (começo do e-mail) uma única vez

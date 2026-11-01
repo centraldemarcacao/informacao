@@ -77,6 +77,18 @@ PARA ATIVAR
 2. (Não usa Firebase Storage: os anexos ficam no Firestore, plano gratuito.)
 3. Copie triagem.html, triagem.js, painel.html, firestore.rules (publicar), shell.js, index.html e styles.css para o repositório.
 
+TREINAMENTO (treinamento.html + treinamento.js)
+- Guia por área: Lições, Árvore de decisão, Cartões, Quiz, Simulador de atendimento e Consulta rápida.
+- TODO o conteúdo está em treinamento.js (objeto TREINO). Radioterapia pronta; Oncologia Clínica e Hematologia
+  aparecem como "Em breve". Para criar um módulo: preencha licoes, arvore, cartoes, quiz, simulador e cola
+  (mesma estrutura da Radioterapia, explicada no topo do arquivo) e troque pronto: true.
+- Progresso: visitante fica só no navegador; quem entrou também grava no perfil (campo "treino").
+  Aprovação = nota mínima de 70% (MIN_OK em treinamento.html e MIN em painel.html).
+- Painel de Controle > Treinamento (Gestor/Administrador): progresso de cada usuário.
+PARA ATIVAR: copie treinamento.html, treinamento.js, shell.js, index.html, painel.html, chatbot.js e styles.css
+  e PUBLIQUE de novo o firestore.rules (libera o campo "treino" no perfil; sem isso o progresso não salva na conta).
+- O chatbot (Worker) não lê estes arquivos: para ele responder com o conteúdo, copie o texto do treinamento.js para a base do Worker.
+
 CSS
 - TODO o CSS do site está em styles.css (nenhuma página tem mais <style>). Estilos específicos de uma página
   ficam no final do arquivo, com escopo body[data-page="..."]; classes u01...u35 substituem style="" estáticos.
