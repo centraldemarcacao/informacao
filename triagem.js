@@ -720,7 +720,7 @@
 
   /* ---------- comprovante de solicitação (tela + impressão/PDF) ----------
      Mesmo layout do "Comprovante de Agendamento": logo, título, seções com linha e pares rótulo/valor. */
-  const LOGO_URL = 'https://ligacontraocancer.com.br/wp-content/themes/v01/assets/img/build/liga-contra-o-cancer-footer-red.f7f3067c.png';
+  const LOGO_URL = new URL('logo.png', location.href).href;   /* arquivo logo.png na mesma pasta das páginas */
   const CP_CSS =
     '.cp{font:14px/1.45 Arial,Helvetica,sans-serif;color:#1c1c1c;background:#fff;padding:26px 30px 22px;text-align:left}' +
     '.cp *{box-sizing:border-box}' +
@@ -754,7 +754,7 @@
     const status = r.status || STATUS.PENDENTE, info = STATUS_INFO[status] || STATUS_INFO[STATUS.PENDENTE];
     const idade = completo ? (validarNascimento(d.nascimento) ? fmtNascIdade(d.nascimento) : fmtNasc(d.nascimento)) : '';
     return '<div class="cp st-' + info.cls + '">' +
-      '<div class="cp-top"><img src="' + LOGO_URL + '" alt="Liga Contra o Câncer"><h1>Comprovante de Solicitação de Triagem</h1></div>' +
+      '<div class="cp-top"><img src="' + LOGO_URL + '" alt="Liga Contra o Câncer" onerror="this.style.display=\'none\'"><h1>Comprovante de Solicitação de Triagem</h1></div>' +
       '<div class="cp-proto"><div><small>Número do protocolo</small><b>' + esc(r.protocolo) + '</b></div><span class="cp-st">' + esc(status) + ' · ' + esc(info.desc) + '</span></div>' +
       '<h2>Dados pessoais</h2>' +
       '<dl>' + par('Nome civil', (d.nome || '').trim(), true) +

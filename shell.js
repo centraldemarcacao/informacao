@@ -19,7 +19,10 @@
     { id: 'painel',           href: 'painel.html',           label: 'Painel de Controle', ico: '⚙️' }
   ];
 
-  var LOGO = 'https://ligacontraocancer.com.br/wp-content/themes/v01/assets/img/build/liga-contra-o-cancer-footer-red.f7f3067c.png';
+  /* Logo: use o arquivo logo.png (ou logo.svg) na MESMA pasta das páginas. Se ele não existir, tenta o logo do site da Liga e,
+     por último, mostra só o nome. (O endereço antigo do site da Liga saiu do ar quando o site deles foi refeito.) */
+  var LOGO = 'logo.png';
+  var LOGO_RESERVA = 'https://ligacontraocancer.com.br/logo/logo.svg';
   var FAVICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAOVBMVEVHcEzfbFPaW1TZW1DbYk7aXVDYVlDWTVLXVFDYVlDaYUzaXlDdaE7idVjhclbgb1Tgb1Xic1fkeFyJbEO4AAAAEnRSTlMAHDlOZ4bL/+f//6f/0+7/sseHLxJ+AAAA70lEQVR4AWXPR4IEIQwEQakb7+H/j91CMFqXcAss/Yqf17wPk6Zgnb8F85tMiNFHr/z8oPhJWdWlmISCQ+HoIU4JKJwJ2bM9CwaYuGIUJpQBYpgHYXsYIi6pKF+U9rm2qF408iq8jqgWBFc8ZewlakX1P/bSD28df3d2ZM3pJcW0cW7k9+DD5uZSCkRWEEv26YOLvjwOIlaEZqA+3RBRXUDC4No3qjLwWWtNNLB9HERyJZqr79EF5XTJCDK2QtvFcrTRyWwFVsEdXL88BAnxtT5Iq1srXlXX0aaE2rr1JcwquvdTU9N7tUH/4svzoU9ff84W2I/rlSEAAAAASUVORK5CYII=';
   var current = document.body.getAttribute('data-page') || '';
 
@@ -39,7 +42,7 @@
   document.body.insertAdjacentHTML('afterbegin',
     '<a class="skip" href="#conteudo">Ir para o conteúdo</a>' +
     '<header class="topbar">' +
-      '<a href="index.html" title="Início"><img src="' + LOGO + '" alt="Liga Contra o Câncer"></a>' +
+      '<a href="index.html" title="Início" id="logoLink"><img src="' + LOGO + '" alt="Liga Contra o Câncer"></a>' +
       '<div class="brand-title">Central de Marcação</div>' +
       '<button class="tema-btn" id="temaBtn" type="button" aria-label="Alternar tema claro/escuro"></button>' +
       '<a class="user-btn" id="userBtn" href="painel.html" title="Painel de Controle">⚙️ <span>Painel</span></a>' +
@@ -51,6 +54,15 @@
   document.body.insertAdjacentHTML('beforeend',
     '<footer class="footer">Liga Contra o Câncer • Central de Marcação • <a href="painel.html">Painel de Controle</a></footer>' +
     '<div class="toast" id="toast" role="status" aria-live="polite"></div>');
+  (function () {
+    var lg = document.querySelector('#logoLink img'); if (!lg) return;
+    lg.addEventListener('error', function () {
+      if (!lg.dataset.r) { lg.dataset.r = '1'; lg.src = LOGO_RESERVA; return; }
+      var a = document.getElementById('logoLink');
+      a.innerHTML = '<strong style="color:#1a4f88;font-size:1rem;letter-spacing:.04em">Liga Contra o Câncer</strong>';
+    });
+  })();
+
 
   var menu = document.getElementById('sideMenu');
   var overlay = document.getElementById('overlay');
