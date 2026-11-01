@@ -89,7 +89,7 @@
   var root = el('div', 'lg-chat'); root.setAttribute('role', 'complementary'); root.setAttribute('aria-label', TITULO);
 
   var launch = el('div', 'lg-launch');
-  var dica = el('div', 'lg-dica', 'Dúvidas? Consulte o assistente');
+  var dica = el('div', 'lg-dica', 'Dúvidas? Converse comigo! 😊');
   var fab = el('button', 'lg-fab'); fab.type = 'button'; fab.setAttribute('aria-label', 'Abrir assistente de dúvidas'); fab.setAttribute('aria-expanded', 'false');
   if (AVATAR_NO_BOTAO && AVATAR) comImagem(fab, ICO.chat); else fab.innerHTML = ICO.chat;
   launch.appendChild(dica); launch.appendChild(fab);
