@@ -303,7 +303,7 @@ Segunda a sexta
 
 1º Passo: Se dirigir na secretaria de saúde do município, portando o documento pessoal com foto e CPF.
 2º Passo: Solicitando inserir a consulta, informando a especialidade, nome do médico e os dados do paciente.
-3º Passo: Aguardar 20 dias. Após o prazo, retorne o contato conosco para liberarmos a autorização.
+3º Passo: Aguardar até 20 dias úteis. Após o prazo, retorne o contato conosco para liberarmos a autorização.
 
 Caso a secretaria de saúde tenha dúvidas, favor, manter contato diretamente com a Sesap/RN e serão orientados.`,
 
