@@ -339,7 +339,7 @@ Segunda a sexta
 
 *Paciente deverá trazer no dia da consulta:*  
 - O paciente deverá ir à secretaria de saúde dar entrada na autorização da consulta antes da data agendada.
-- Documentos pessoais, comprovante de residência em seu nome, cartão do SUS atualizado do município em que reside, encaminhamento/ficha de referência, autorização do município REGULA/RN`,
+- Documentos pessoais, comprovante de residência em seu nome, cartão do SUS atualizado do município em que reside, encaminhamento/ficha de referência, autorização do município REGULA/RN e exames anteriores, caso tenha.`,
 
     consultaconvenio: `*ATENÇÃO:* Paciente deverá chegar 30 minutos antes para registrar o atendimento e receber as informações necessárias para realização deste procedimento.
     
